@@ -1,0 +1,244 @@
+/*Sobre Nosotros Team Talks*/
+body {
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+    font-family: 'Arial', sans-serif;
+    line-height: 1.6;
+    background-color: #f4f4f9;
+    color: #333;
+}
+
+a {
+    text-decoration: none;
+    color: #333;
+}
+
+ul {
+    list-style: none;
+    padding: 0;
+}
+
+/* Header */
+
+header {
+    background: #ffffff;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    padding: 15px 30px;
+    border-bottom: 3px solid #348FEA;
+}
+
+.logo-container {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.logo {
+    height: 120px;
+    transform: translate(0);
+}
+
+.nav-links {
+    display: flex;
+    gap: 50px;
+    transform: translateX(710px);
+}
+
+.nav-links li a {
+    color: #000000;
+    font-size: 16px;
+    font-weight: bold;
+    transition: color 0.3s;
+}
+
+.nav-links li a:hover {
+    color: #348FEA;
+}
+
+.btn {
+    background: #0E4A86;
+    border: none;
+    padding: 10px 20px;
+    color: #ffffff;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: background 0.3s;
+    margin-left: auto; 
+    transform: translateX(750px);
+}
+
+.btn:hover {
+    background: #348FEA;
+}
+
+/*Principal*/
+
+.container {
+    display: flex;
+  }
+  
+  .content {
+    text-align: left;
+    transform: translate(120px, 250px);
+  }
+
+/*Segunda franja*/
+/* Estilo general */
+.content2 {
+    text-align: center;
+    font-family: Arial, sans-serif;
+    padding: 70px;
+}
+
+
+.content2 h2 {
+    font-size: 28px; 
+    color: #000000; 
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+
+.items-container {
+    display: flex;
+    justify-content: center; 
+    gap: 50px; 
+    flex-wrap: wrap; 
+}
+
+
+.item {
+    text-align: left; 
+    max-width: 300px; 
+    margin: 0 auto; 
+}
+
+
+.item img {
+    width: 80px; 
+    height: 80px; 
+    border-radius: 50%; 
+    object-fit: cover; 
+    transform: translate(-60px, 60px);
+}
+
+
+.item h3 {
+    font-size: 16px; 
+    margin: 10px 0 5px;
+    color: black;
+    font-weight: bold;
+    transform: translate(50px, -50px);
+}
+
+
+.item h4 {
+    font-size: 17px; /* Tamaño adecuado */
+    color: black; /* Color del texto */
+    line-height: 1.5; /* Altura de línea para mejor legibilidad */
+    font-weight: normal; /* Estilo de texto normal */
+    margin-top: 10px; /* Espaciado entre el título y el texto */
+    transform: translate(50px, -50px);
+}
+
+
+
+
+
+/*Franja*/
+
+.franja {
+    background-color: #0E4A86;
+    padding: 20px 0;
+}
+
+.contenedor {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.tarjeta {
+    color: #ffffff;
+    text-align: left;
+    max-width: 400px;
+}
+
+.tarjeta h2 {
+    margin: 0;
+    font-size: 1.5em;
+    border-left: 4px solid #19cf9f; 
+    padding-left: 10px;
+}
+
+.tarjeta p {
+    margin-top: 10px;
+    font-size: 1em;
+    line-height: 1.5;
+}
+
+.images{
+    display: flex;
+    justify-content: center; 
+    align-items: center; 
+    flex-wrap: wrap; 
+    gap: 20px; 
+    position: relative; 
+}
+
+strong{
+    color: #348FEA;
+}
+
+.large-image {
+    width: 600px;
+    height: 500px;
+    margin: 10px; 
+    object-fit: cover; 
+    transform: translate(300px, -75px);
+    border-radius: 30px;
+}
+
+/*Pie de pagina*/
+
+footer {
+    background: #0E4A86;
+    color: #ffffff;
+    text-align: center;
+    padding: 20px 0;
+    margin-top: 0;
+}
+
+.footer-content {
+    display: flex;
+    justify-content: left;
+    gap: 20px;
+    transform: translateX(85px);
+}
+
+.social-links li {
+    display: inline-block;
+    margin: 0 10px;
+}
+
+.social-links li a {
+    color: #ffffff;
+    font-size: 40px;
+    transition: color 0.3s;
+}
+
+.social-links li a:hover {
+    color: #007BFF;
+}
+
+.nav-links li .sobre {
+    text-decoration: underline;
+    color: #007BFF;
+}
