@@ -85,40 +85,39 @@ body {
 .enlace {
     display: flex;
     align-items: center;
-    justify-content: flex-start; /* Alineación inicial */
-    padding: 0.75rem 1rem;
+    justify-content: flex-start;
     cursor: pointer;
     color: white;
     text-decoration: none;
-    background-color: transparent; /* Sin fondo inicialmente */
+    background-color: transparent;
     border-radius: 5px;
     transition: background-color 0.3s ease;
+    padding-left: 1rem; /* Añade espacio entre el borde izquierdo y el contenido */
 }
 
 .enlace:hover {
-    background-color: rgba(255, 255, 255, 0.1); /* Fondo al pasar el ratón */
+    background-color: rgba(255, 255, 255, 0.1);
 }
 
 .enlace i {
     font-size: 1.5rem;
     margin-right: 10px; /* Espaciado entre el ícono y el texto */
-    color: white; /* Color blanco */
+    color: white;
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
 .enlace a {
+    display: block; /* Hace que el <a> ocupe el espacio */
+    width: 100%; /* Asegura que ocupe todo el ancho del contenedor .enlace */
+    padding: 0.75rem 1rem; /* Define el padding para que sea clicable */
     color: white;
-    font-size: 16px;
+    font-size: 14px; /* Puedes ajustar el tamaño de la fuente */
     text-decoration: none;
-    display: flex;
-    align-items: center; /* Centra verticalmente */
+    border-radius: 5px;
 }
 
 .enlace a:hover {
     text-decoration: none;
 }
-
-
-

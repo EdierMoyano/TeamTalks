@@ -159,7 +159,7 @@ strong {
 /* Footer */
 
 footer {
-    background: #0E4A86;
+    background-color: #0E4A86;  /* Cambiar a background-color */
     color: #fff;
     text-align: center;
     padding: 20px 0;
@@ -187,7 +187,6 @@ footer {
 .social-links li a:hover {
     color: #007BFF;
 }
-
 
 .nav-links li .ind {
     text-decoration: underline;
