@@ -1,0 +1,65 @@
+/* Variables CSS */
+:root {
+    --footer-bg-color: #0E4A86; /* Color inicial del footer */
+}
+
+.main { 
+    align-items: center;
+}
+
+header {
+    display: none; /* Ocultamos el header si no es necesario */
+}
+
+.admin-settings {
+    margin-bottom: 50px; /* Espacio inferior antes del footer */
+    padding: 20px;
+    width: 100%; /* Ocupa el ancho completo del contenedor */
+    max-width: 600px; /* Limita el ancho máximo */
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    text-align: center; /* Centra el contenido dentro */
+    align-items: center;
+    
+}
+
+.admin-settings label {
+    font-size: 16px;
+    margin-right: 10px;
+}
+
+.admin-settings input[type="color"] {
+    cursor: pointer;
+    border: none;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border-radius: 5px;
+    margin-right: 10px;
+}
+
+.admin-settings button {
+    background-color: #348FEA;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    font-size: 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    margin-top: 15px; /* Espaciado superior */
+}
+
+.admin-settings button:hover {
+    background-color: #005bb5;
+}
+
+footer {
+    background: var(--footer-bg-color);
+    color: #fff;
+    text-align: center;
+    padding: 20px 0;
+    width: 100%;
+}

@@ -209,36 +209,23 @@ strong{
 /*Pie de pagina*/
 
 footer {
-    background: #0E4A86;
-    color: #ffffff;
-    text-align: center;
-    padding: 20px 0;
-    margin-top: 0;
+    background-color: #0E4A86;
+    color: #fff;
 }
 
-.footer-content {
-    display: flex;
-    justify-content: left;
-    gap: 20px;
-    transform: translateX(85px);
+a {
+    text-decoration: none;
+    font-size: 17px;
 }
 
-.social-links li {
-    display: inline-block;
-    margin: 0 10px;
+p {
+    font-size: 17px;
 }
 
-.social-links li a {
-    color: #ffffff;
-    font-size: 40px;
-    transition: color 0.3s;
+a:hover {
+    color: #0d6efd !important;
 }
 
-.social-links li a:hover {
-    color: #007BFF;
-}
-
-.nav-links li .sobre {
-    text-decoration: underline;
-    color: #007BFF;
+.content {
+    padding-bottom: 250px;
 }

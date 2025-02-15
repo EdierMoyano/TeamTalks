@@ -1,0 +1,26 @@
+/* Footer */
+footer {
+    background-color: #0E4A86;
+    color: #fff;
+}
+
+a {
+    text-decoration: none;
+    font-size: 17px;
+}
+
+p {
+    font-size: 17px;
+}
+
+a:hover {
+    color: #0d6efd !important;
+}
+
+.content {
+    padding-bottom: 250px;
+}
+
+hr {
+    border-top: 1px solid #fff;
+}

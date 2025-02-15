@@ -9,7 +9,13 @@ body {
     background-color: #0e4a8642;
 }
 
-.table {
+.tableA {
+    position: relative;
+    left: 120px;
+    top: 360px;
+}
+
+.tableB {
     position: relative;
     left: 120px;
     top: 240px;
@@ -78,7 +84,7 @@ td input {
     
 }
 
-td input[readonly] {
+td input[readonly], td input {
     background: #eef2f7;
     color: #000000;
     
@@ -171,6 +177,7 @@ select {
 select option {
     background: white;
     color: black;
+
 }
 
 
@@ -275,7 +282,7 @@ button:hover {
 
 input.act_correo, select.act_est, select.act_rol, select.act_tipo {
     background-color: #eef2f7;
-    border: solid 1px black;
+    border: none;
 }
 
 .table2 {
@@ -304,3 +311,35 @@ input.act_correo, select.act_est, select.act_rol, select.act_tipo {
     width: 600px;
     transform: translateX(-180px) translateY(12px);
 }
+
+.registro {
+    left: 790px;
+    top: 365px;
+}
+
+button.registro {
+  justify-content: center;
+  border-radius: 10px;
+  cursor: pointer;
+  border: 0;
+  background-color: white;
+  box-shadow: rgb(0 0 0 / 5%) 0 0 8px;
+  font-size: 15px;
+  transition: all 0.5s ease;
+}
+
+button.registro:hover {
+  background-color: #407bcf;
+  color: hsl(0, 0%, 100%);
+  box-shadow: #407bcf 0px 7px 29px 0px;
+}
+
+button.registro:active {
+  background-color: #407bcf;
+  color: hsl(0, 0%, 100%);
+  box-shadow: #407bcf 0px 0px 0px 0px;
+  transform: translateY(10px);
+  transition: 100ms;
+}
+
+

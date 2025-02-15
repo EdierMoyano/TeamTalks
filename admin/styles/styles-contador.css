@@ -24,6 +24,6 @@
 #contador-usuarios p {
     margin: 10px 0 0;
     font-size: 2.5rem; /* Tamaño del número */
-    color: #0aa026; /* Color del número */
+    color: orange; /* Color del número */
     display: block;
 }

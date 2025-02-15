@@ -5,27 +5,30 @@ $conexion = new database();
 $conex = $conexion->connect();
 
 if (isset($_POST['submit'])) {
-    $correo = $_POST['correo'];
-    $documento = $_POST['docu'];
+    $correo = trim($_POST['correo']);
+    $documento = trim($_POST['docu']);
 
     if (empty($correo) || empty($documento)) {
         echo '<script>alert("Ningún dato puede estar vacío");</script>';
-        echo '<script>window.location = "recovery.php";</script>';
-        exit;
-    }
-
-    
-    $sql = $conex->prepare("SELECT * FROM usuarios WHERE Correo = '$correo' AND Id_user = '$documento'");
-    $sql ->execute();
-    $fila = $sql->fetch(PDO::FETCH_ASSOC);
-
-    if ($fila) {
-        $_SESSION['id'] = $fila['Id_user'];
-        $_SESSION['email'] = $fila['Correo'];
-        echo '<script>window.location = "change.php";</script>';
     } else {
-        echo '<script>alert("Correo o número de documento incorrectos");</script>';
-        echo '<script>window.location = "recovery.php";</script>';
+        // Verificar si el usuario existe
+        $sql = $conex->prepare("SELECT * FROM usuarios WHERE Correo = ? AND Id_user = ?");
+        $sql->execute([$correo, $documento]);
+        $fila = $sql->fetch(PDO::FETCH_ASSOC);
+
+        if ($fila) {
+            $_SESSION['id'] = $fila['Id_user'];
+            $_SESSION['email'] = $fila['Correo'];
+            // Redirigir con los datos usando POST
+            echo '<form id="sendForm" action="enviar_recuperacion.php" method="POST">
+                      <input type="hidden" name="correo" value="' . htmlspecialchars($correo) . '">
+                      <input type="hidden" name="docu" value="' . htmlspecialchars($documento) . '">
+                  </form>
+                  <script>document.getElementById("sendForm").submit();</script>';
+            exit;
+        } else {
+            echo '<script>alert("Correo o número de documento incorrectos");</script>';
+        }
     }
 }
 ?>
@@ -51,15 +54,12 @@ if (isset($_POST['submit'])) {
             solo dinos con qué dirección de e-mail te registraste <br>
             en TeamTalks.</p>
             <form action="" method="POST" autocomplete="off">
-                <label for="documentId">Correo electrónico</label>
+                <label for="correo">Correo electrónico</label>
                 <input type="email" id="correo" name="correo" placeholder="Ingresa tu correo electrónico" required>
 
-                <label for="documentId">Documento</label>
+                <label for="docu">Documento</label>
                 <input type="number" id="docu" name="docu" placeholder="Ingresa tu número de documento" required>
 
-                
-                
-        
                 <div class="buttons">
                     <a href="login.php"><button type="button" class="secondary-btn">Regresar</button></a>
                     <button type="submit" class="primary-btn" name="submit">Enviar</button>

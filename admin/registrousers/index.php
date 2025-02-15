@@ -9,6 +9,43 @@ $con = $conex->connect();
 ?>
 
 <?php
+
+if (isset($_POST['ingreso'])) {
+
+    
+
+
+    $tipo = $_POST['tipo'];
+    $docu = $_POST['docum'];
+    $name = $_POST['nombre'];
+    $correo = $_POST['correo'];
+    $password = $_POST['pass'];
+    $contra = password_hash($password, PASSWORD_DEFAULT, array("cost" => 12));
+    $tel = $_POST['tel'];
+    $avatar = NULL;
+    $rol = $_POST['rol'];
+    $estado = $_POST['estado'];
+
+    $sql4 = $con -> prepare("SELECT * FROM usuarios WHERE Id_user = $docu AND Correo = '$correo'");
+    $sql4 ->execute();
+    $user = $sql4->fetch();
+
+    if($user) {
+        echo "<script>alert('El usuario ya está registrado');</script>";
+        echo "<script>window.location = 'index.php';</script>";
+    }else {
+        $ing = $con ->prepare("INSERT INTO usuarios(Id_user, Nombres, Correo, Contrasena, Avatar, Telefono, Id_rol, Id_estado, id_docu, fecha_registro)VALUES ($docu, '$name', '$correo', '$contra', '$avatar', $tel, $rol, $estado, $tipo, NOW())");
+        $ing ->execute();
+        echo "<script>alert('Usuario registrado exitosamente');</script>";
+        echo "<script>window.location = 'index.php';</script>";
+    }
+
+    
+}
+
+?>
+
+<?php
     $admin = $_SESSION ['documento'];
     $sql = $con -> prepare("SELECT * FROM usuarios WHERE Id_user = '$admin'");
     $sql ->execute();
@@ -96,7 +133,7 @@ $con = $conex->connect();
     <div class="content">
         <div class="title">
             <h1>Registro</h1><br>
-            <p class="parrafo">Aqui puedes subir tu archivo .csv para registrar y/o actualizar usuarios</p>
+            <p class="parrafo">Aqui puedes subir tu archivo .csv para registrar muchos usuarios a la vez</p>
             
         </div>
 
@@ -114,10 +151,79 @@ $con = $conex->connect();
             </div>
         </form>
 
+        <form action="" method="POST" autocomplete="off">
+            <table class="tableB" border="2">
+                <tr>
+                    <th class="tipo">Tipo documento</th>
+                    <th class="documento">Documento</th>
+                    <th class="nombres">Nombres</th>
+                    <th class="correo">Correo</th>
+                    <th class="contraseña">Contraseña</th>
+                    <th class="telefono">Telefono</th>
+                    <th class="rol">Rol</th>
+                    <th class="estado">Estado</th>
+                    
+                    
+                    
+                </tr>
+
+                <tr>
+                    <td name="fila"><select class="act_tipo" name="tipo" required>
+                        <option value="<?php echo $fila['id_docu']?>">Tipo de documento</option>
+                                <?php
+                                    $sql1 = $con->prepare("SELECT * FROM identidad");
+                                    $sql1->execute();
+                                    while ($role=$sql1->fetch(PDO::FETCH_ASSOC)) {
+                                        echo  "<option value=" . $role['id_docu']. ">" . $role['docu'] ." </option>";
+                                    }
+
+                                ?>
+                        </select></td>
+
+                    <td name="fila"><input type="number" name="docum" placeholder="N° documento" required></td>
+                    <td name="fila"><input type="text" name="nombre" placeholder="Nombres" required></td>
+                    <td name="fila"><input type="email" name="correo" placeholder="Correo electrónico" required></td>
+                    <td nmae="fila"><input type="text" name="pass" placeholder="Contraseña" required></td>
+                    <td name="fila"><input type="number" name="tel" placeholder="N° de teléfono" required></td>
+                    <td name="fila"><select class="act_rol" name="rol" required>
+                        <option value="<?php echo $fila['Id_rol']?>">Rol</option>
+                            <?php
+                            $sql1 = $con->prepare("SELECT * FROM roles");
+                            $sql1->execute();
+                            while ($role=$sql1->fetch(PDO::FETCH_ASSOC)) {
+                                echo  "<option value=" . $role['Id_rol']. ">" . $role['Tipo_rol'] ." </option>";
+                            }
+
+                        ?>
+                        </select></td>
+
+                    <td name="fila"><select class="act_est" name="estado" required>
+                        <option value="<?php echo $fila['Id_estado']?>">Estado</option>
+                            <?php
+                            $sql1 = $con->prepare("SELECT * FROM estado");
+                            $sql1->execute();
+                            while ($state=$sql1->fetch(PDO::FETCH_ASSOC)) {
+                                echo  "<option value=" . $state['Id_estado']. ">" . $state['Tipo_estado'] ." </option>";
+                            }
+
+                        ?>
+                        </select></td>
+                    
+                    
+                </tr>
+
+
+            </table>
+
+            <button type="submit" name="ingreso" class="registro">Registrar</button>
+        </form>
+
+        
+
         
 
         <!-- Tabla para mostrar datos -->
-        <table class="table" border="2">
+        <table class="tableA" border="2">
             <tr>
                 <th class="tipo">Tipo documento</th>
                 <th class="documento">Documento</th>

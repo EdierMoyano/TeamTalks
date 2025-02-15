@@ -44,7 +44,7 @@ if (isset($_POST['submit'])) {
             }
 
             if ($_SESSION ['rol'] == 3) {
-                header("Location: ../estudiante/index.php");
+                header("Location: ../team_usu/inicio/index.php");
                 exit();
             }
 
