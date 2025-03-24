@@ -4,17 +4,10 @@ include '../../includes/session.php';
 
 $conex = new database();
 $con = $conex->connect();
-
-
 ?>
 
 <?php
-
 if (isset($_POST['ingreso'])) {
-
-    
-
-
     $tipo = $_POST['tipo'];
     $docu = $_POST['docum'];
     $name = $_POST['nombre'];
@@ -25,30 +18,78 @@ if (isset($_POST['ingreso'])) {
     $avatar = NULL;
     $rol = $_POST['rol'];
     $estado = $_POST['estado'];
+    $ficha = isset($_POST['ficha']) ? trim($_POST['ficha']) : ''; // Nuevo campo ficha
 
-    $sql4 = $con -> prepare("SELECT * FROM usuarios WHERE Id_user = $docu AND Correo = '$correo'");
-    $sql4 ->execute();
+    $sql4 = $con->prepare("SELECT * FROM usuarios WHERE Id_user = ? AND Correo = ?");
+    $sql4->execute([$docu, $correo]);
     $user = $sql4->fetch();
 
     if($user) {
         echo "<script>alert('El usuario ya está registrado');</script>";
         echo "<script>window.location = 'index.php';</script>";
-    }else {
-        $ing = $con ->prepare("INSERT INTO usuarios(Id_user, Nombres, Correo, Contrasena, Avatar, Telefono, Id_rol, Id_estado, id_docu, fecha_registro)VALUES ($docu, '$name', '$correo', '$contra', '$avatar', $tel, $rol, $estado, $tipo, NOW())");
-        $ing ->execute();
-        echo "<script>alert('Usuario registrado exitosamente');</script>";
-        echo "<script>window.location = 'index.php';</script>";
+    } else {
+        // Verificar si la ficha existe cuando es estudiante y se proporciona una ficha
+        if ($rol == 3 && !empty($ficha)) {
+            $checkFicha = $con->prepare("SELECT * FROM fichas WHERE numero_ficha = ?");
+            $checkFicha->execute([$ficha]);
+            if ($checkFicha->rowCount() == 0) {
+                echo "<script>alert('La ficha $ficha no existe. Debe crear la ficha antes de registrar estudiantes con esta ficha.');</script>";
+                echo "<script>window.location = 'index.php';</script>";
+                exit;
+            }
+        }
+
+        // Iniciar transacción
+        $con->beginTransaction();
+        
+        try {
+            // Insertar usuario
+            $ing = $con->prepare("INSERT INTO usuarios(Id_user, Nombres, Correo, Contrasena, Avatar, Telefono, Id_rol, Id_estado, id_docu, fecha_registro,ficha)VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?,?, NOW())");
+            $ing->execute([$docu, $name, $correo, $contra, $avatar, $tel, $rol, $estado, $tipo]);
+            
+            // Si es estudiante y tiene ficha, asignarlo a la clase correspondiente
+            if ($rol == 3 && !empty($ficha)) {
+                // Obtener la ficha
+                $getFicha = $con->prepare("SELECT * FROM fichas WHERE numero_ficha = ?");
+                $getFicha->execute([$ficha]);
+                $ficha_data = $getFicha->fetch(PDO::FETCH_ASSOC);
+                
+                if ($ficha_data) {
+                    // Buscar la clase asociada a esta ficha
+                    $clase_nombre = "Clase " . $ficha_data['nombre_ficha'];
+                    $getClase = $con->prepare("SELECT * FROM clases WHERE Nom_clase = ?");
+                    $getClase->execute([$clase_nombre]);
+                    
+                    if ($getClase->rowCount() > 0) {
+                        $clase = $getClase->fetch(PDO::FETCH_ASSOC);
+                        $id_clase = $clase['Id_clase'];
+                        
+                        // Asignar el estudiante a la clase
+                        $insertAsignacion = $con->prepare("INSERT INTO usuarios_clases (id_user, id_clase) VALUES (?, ?)");
+                        $insertAsignacion->execute([$docu, $id_clase]);
+                    }
+                }
+            }
+            
+            // Confirmar la transacción
+            $con->commit();
+            echo "<script>alert('Usuario registrado exitosamente');</script>";
+            echo "<script>window.location = 'index.php';</script>";
+            
+        } catch (Exception $e) {
+            // Revertir la transacción en caso de error
+            $con->rollBack();
+            echo "<script>alert('Error al registrar el usuario: " . $e->getMessage() . "');</script>";
+            echo "<script>window.location = 'index.php';</script>";
+        }
     }
-
-    
 }
-
 ?>
 
 <?php
     $admin = $_SESSION ['documento'];
-    $sql = $con -> prepare("SELECT * FROM usuarios WHERE Id_user = '$admin'");
-    $sql ->execute();
+    $sql = $con->prepare("SELECT * FROM usuarios WHERE Id_user = '$admin'");
+    $sql->execute();
     $fila = $sql->fetch();
 ?>
 
@@ -62,7 +103,48 @@ if (isset($_POST['ingreso'])) {
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <link rel="stylesheet" href="../styles/styles-dashboard.css">
     <link rel="stylesheet" href="styles_registro/registro.css">
-    
+    <style>
+        /* Estilos adicionales para el campo de ficha */
+        .ficha {
+            width: 120px;
+        }
+        
+        /* Estilo para el modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+        
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 50%;
+            border-radius: 5px;
+        }
+        
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+    </style>
 </head>
 
 <body>
@@ -74,8 +156,6 @@ if (isset($_POST['ingreso'])) {
                 <span><h5><?php echo $fila['Nombres']; ?> <br>Administrador</h5></span>
             </div>
         </div>
-
-        
 
         <!-- Menu lateral -->
         <div class="menu">
@@ -97,7 +177,11 @@ if (isset($_POST['ingreso'])) {
             </div>
             <div class="enlace">
                 <i class='bx bx-book'></i>
-                <a href="#" class="boton-menu">Clases</a>
+                <a href="../fichas/fichas.php" class="boton-menu">Fichas</a>
+            </div>
+            <div class="enlace">
+                <i class='bx bx-book'></i>
+                <a href="../clases/clases.php" class="boton-menu">Clases</a>
             </div>
             <div class="enlace">
                 <i class='bx bx-library'></i>
@@ -134,13 +218,10 @@ if (isset($_POST['ingreso'])) {
         <div class="title">
             <h1>Registro</h1><br>
             <p class="parrafo">Aqui puedes subir tu archivo .csv para registrar muchos usuarios a la vez</p>
-            
         </div>
 
-        
-        <form action ="recibe_excel_validando.php" method="POST" enctype="multipart/form-data">
+        <form action="recibe_excel_validando.php" method="POST" enctype="multipart/form-data">
             <div class="cargar">
-                
                 <label class="boton-seleccionar">
                     <strong><input type="file" name="csv_file" accept=".csv" required>
                     Seleccionar archivo</strong>
@@ -162,65 +243,64 @@ if (isset($_POST['ingreso'])) {
                     <th class="telefono">Telefono</th>
                     <th class="rol">Rol</th>
                     <th class="estado">Estado</th>
-                    
-                    
-                    
+                    <th class="ficha">Ficha</th>
                 </tr>
 
                 <tr>
                     <td name="fila"><select class="act_tipo" name="tipo" required>
-                        <option value="<?php echo $fila['id_docu']?>">Tipo de documento</option>
+                        <option value="">Tipo de documento</option>
                                 <?php
                                     $sql1 = $con->prepare("SELECT * FROM identidad");
                                     $sql1->execute();
                                     while ($role=$sql1->fetch(PDO::FETCH_ASSOC)) {
                                         echo  "<option value=" . $role['id_docu']. ">" . $role['docu'] ." </option>";
                                     }
-
                                 ?>
                         </select></td>
 
                     <td name="fila"><input type="number" name="docum" placeholder="N° documento" required></td>
                     <td name="fila"><input type="text" name="nombre" placeholder="Nombres" required></td>
                     <td name="fila"><input type="email" name="correo" placeholder="Correo electrónico" required></td>
-                    <td nmae="fila"><input type="text" name="pass" placeholder="Contraseña" required></td>
+                    <td name="fila"><input type="text" name="pass" placeholder="Contraseña" required></td>
                     <td name="fila"><input type="number" name="tel" placeholder="N° de teléfono" required></td>
-                    <td name="fila"><select class="act_rol" name="rol" required>
-                        <option value="<?php echo $fila['Id_rol']?>">Rol</option>
+                    <td name="fila"><select class="act_rol" name="rol" id="rol_select" required>
+                        <option value="">Rol</option>
                             <?php
                             $sql1 = $con->prepare("SELECT * FROM roles");
                             $sql1->execute();
                             while ($role=$sql1->fetch(PDO::FETCH_ASSOC)) {
                                 echo  "<option value=" . $role['Id_rol']. ">" . $role['Tipo_rol'] ." </option>";
                             }
-
                         ?>
                         </select></td>
 
                     <td name="fila"><select class="act_est" name="estado" required>
-                        <option value="<?php echo $fila['Id_estado']?>">Estado</option>
+                        <option value="">Estado</option>
                             <?php
                             $sql1 = $con->prepare("SELECT * FROM estado");
                             $sql1->execute();
                             while ($state=$sql1->fetch(PDO::FETCH_ASSOC)) {
                                 echo  "<option value=" . $state['Id_estado']. ">" . $state['Tipo_estado'] ." </option>";
                             }
-
                         ?>
                         </select></td>
                     
-                    
+                    <td name="fila"><input type="text" name="ficha" id="ficha_input" placeholder="N° de ficha"></td>
                 </tr>
-
-
             </table>
 
             <button type="submit" name="ingreso" class="registro">Registrar</button>
         </form>
 
-        
-
-        
+        <!-- Modal para ficha no encontrada -->
+        <div id="fichaModal" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <h2>Ficha no encontrada</h2>
+                <p>La ficha ingresada no existe. Debe crear la ficha antes de registrar estudiantes con esta ficha.</p>
+                <a href="../fichas/fichas.php" class="btn-crear-ficha" style="display: inline-block; margin-top: 15px; padding: 8px 15px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 4px;">Ir a crear ficha</a>
+            </div>
+        </div>
 
         <!-- Tabla para mostrar datos -->
         <table class="tableA" border="2">
@@ -232,14 +312,21 @@ if (isset($_POST['ingreso'])) {
                 <th class="rol">Rol</th>
                 <th class="estado">Estado</th>
                 <th class="registro">Fecha de registro</th>
-                
+                <th class="ficha">Ficha</th>
             </tr>
 
             <?php
-            $sql = $con->prepare("SELECT * FROM usuarios 
-                                INNER JOIN roles ON usuarios.Id_rol = roles.Id_rol 
-                                INNER JOIN estado ON usuarios.Id_estado = estado.Id_estado 
-                                INNER JOIN identidad ON usuarios.id_docu = identidad.id_docu WHERE roles.Id_rol > 1");
+            $sql = $con->prepare("SELECT u.*, r.Tipo_rol, e.Tipo_estado, i.docu, 
+                                (SELECT f.numero_ficha FROM fichas f 
+                                 INNER JOIN clases c ON c.Nom_clase LIKE CONCAT('%', f.nombre_ficha, '%')
+                                 INNER JOIN usuarios_clases uc ON uc.id_clase = c.Id_clase
+                                 WHERE uc.id_user = u.Id_user
+                                 LIMIT 1) as ficha
+                                FROM usuarios u
+                                INNER JOIN roles r ON u.Id_rol = r.Id_rol 
+                                INNER JOIN estado e ON u.Id_estado = e.Id_estado 
+                                INNER JOIN identidad i ON u.id_docu = i.id_docu 
+                                WHERE r.Id_rol > 1");
             $sql->execute();
             $fila = $sql->fetchAll(PDO::FETCH_ASSOC);
 
@@ -253,7 +340,7 @@ if (isset($_POST['ingreso'])) {
                 <td><input type="text" readonly value="<?php echo $resu['Tipo_rol'] ?>"></td>
                 <td><input type="text" readonly value="<?php echo $resu['Tipo_estado'] ?>"></td>
                 <td><input type="text" readonly value="<?php echo $resu['fecha_registro'] ?>"></td>
-                
+                <td><input type="text" readonly value="<?php echo $resu['ficha'] ? $resu['ficha'] : 'N/A' ?>"></td>
             </tr>
             <?php
             }
@@ -261,7 +348,61 @@ if (isset($_POST['ingreso'])) {
         </table>
     </div>
 
-    
-
+    <script>
+        // Script para manejar el campo de ficha
+        document.addEventListener('DOMContentLoaded', function() {
+            const rolSelect = document.getElementById('rol_select');
+            const fichaInput = document.getElementById('ficha_input');
+            
+            // Función para verificar si la ficha existe
+            function verificarFicha() {
+                const fichaValue = fichaInput.value.trim();
+                if (rolSelect.value == '3' && fichaValue) {
+                    // Hacer una petición AJAX para verificar si la ficha existe
+                    const xhr = new XMLHttpRequest();
+                    xhr.open('POST', 'verificar_ficha.php', true);
+                    xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+                    xhr.onload = function() {
+                        if (this.status === 200) {
+                            const response = JSON.parse(this.responseText);
+                            if (!response.existe) {
+                                // Mostrar modal
+                                document.getElementById('fichaModal').style.display = 'block';
+                            }
+                        }
+                    };
+                    xhr.send('ficha=' + fichaValue);
+                }
+            }
+            
+            // Cerrar el modal cuando se hace clic en la X
+            document.querySelector('.close').addEventListener('click', function() {
+                document.getElementById('fichaModal').style.display = 'none';
+            });
+            
+            // Cerrar el modal cuando se hace clic fuera de él
+            window.addEventListener('click', function(event) {
+                const modal = document.getElementById('fichaModal');
+                if (event.target == modal) {
+                    modal.style.display = 'none';
+                }
+            });
+            
+            // Verificar ficha cuando se pierde el foco del campo
+            fichaInput.addEventListener('blur', verificarFicha);
+            
+            // Hacer que el campo de ficha sea obligatorio solo para estudiantes
+            rolSelect.addEventListener('change', function() {
+                if (this.value == '3') { // Si es estudiante
+                    fichaInput.setAttribute('required', 'required');
+                    fichaInput.placeholder = "N° de ficha (obligatorio)";
+                } else {
+                    fichaInput.removeAttribute('required');
+                    fichaInput.placeholder = "N° de ficha";
+                    fichaInput.value = '';
+                }
+            });
+        });
+    </script>
 </body>
 </html>
