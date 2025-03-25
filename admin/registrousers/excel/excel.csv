@@ -1,4 +1,5 @@
 Id_user;Nombres;Correo;Contrasena;Avatar;Telefono;Id_rol;Id_estado;Id_docu;ficha;
-65904846;Juan Pérez;juanperez@mail.com;password123;;3001234567;3;1;1;2901879
-1109492100;Ana García;anagarcia@mail.com;password456;;3009876543;2;1;2;2901879
-65904847;Carlos López;carloslopez@mail.com;password789;;3001122334;2;1;1;2901878
+65904841;Juanes Pérez;juanperez@mail.com;password123;;3001234567;3;1;1;14092006
+1109492100;Anas García;anagarcia@mail.com;password456;;3009876543;2;1;2;14092006
+65904842;Carlosssa López;carloslopez@mail.com;password789;;3001122334;2;1;1;14092006
+

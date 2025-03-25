@@ -1,20 +1,23 @@
 <?php
 require_once('../../conexion/conexion.php');
 
+// Verificar si se ha enviado el número de ficha
 if (isset($_POST['ficha'])) {
-    $ficha = trim($_POST['ficha']);
+    $numero_ficha = trim($_POST['ficha']);
     
-    $database = new Database();
-    $con = $database->connect();
+    $conex = new database();
+    $con = $conex->connect();
     
-    $checkFicha = $con->prepare("SELECT * FROM fichas WHERE numero_ficha = ?");
-    $checkFicha->execute([$ficha]);
+    // Verificar si la ficha existe
+    $check = $con->prepare("SELECT * FROM fichas WHERE numero_ficha = ?");
+    $check->execute([$numero_ficha]);
     
-    $response = [
-        'existe' => ($checkFicha->rowCount() > 0)
-    ];
-    
+    // Devolver respuesta en formato JSON
     header('Content-Type: application/json');
-    echo json_encode($response);
+    echo json_encode(['existe' => ($check->rowCount() > 0)]);
+} else {
+    // Si no se envió el número de ficha, devolver error
+    header('Content-Type: application/json');
+    echo json_encode(['error' => 'No se proporcionó un número de ficha']);
 }
 ?>
