@@ -12,10 +12,6 @@ $pagina_actual = isset($_GET['pagina']) ? intval($_GET['pagina']) : 1;
 // Obtener clase seleccionada
 $clase_id = isset($_GET['clase_id']) ? intval($_GET['clase_id']) : 0;
 
-// Búsqueda
-$busqueda = isset($_GET['busqueda']) ? $_GET['busqueda'] : '';
-$tipo_busqueda = isset($_GET['tipo_busqueda']) ? $_GET['tipo_busqueda'] : 'nombre';
-
 ?>
 
 <?php
@@ -152,10 +148,89 @@ $tipo_busqueda = isset($_GET['tipo_busqueda']) ? $_GET['tipo_busqueda'] : 'nombr
             color: white;
             text-decoration: none;
             border-radius: 4px;
+            cursor: pointer;
         }
         
         .action-btn:hover {
             background-color: #45a049;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+        
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 1000px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+        }
+        
+        .modal-header {
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .modal-body {
+            margin-bottom: 20px;
+        }
+        
+        .modal-footer {
+            padding-top: 10px;
+            border-top: 1px solid #ddd;
+            text-align: right;
+        }
+        
+        .card {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            padding: 20px;
+        }
+        
+        /* Estilos para el indicador de carga */
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 2s linear infinite;
+            display: none;
+            margin-left: 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     </style>
 </head>
@@ -233,14 +308,12 @@ $tipo_busqueda = isset($_GET['tipo_busqueda']) ? $_GET['tipo_busqueda'] : 'nombr
         
         <!-- Formulario de búsqueda -->
         <div class="search-container">
-            <form action="" method="GET" style="display: flex; width: 100%; gap: 10px;">
-                <select name="tipo_busqueda">
-                    <option value="nombre" <?php if($tipo_busqueda == 'nombre') echo 'selected'; ?>>Buscar por Nombre</option>
-                    <option value="ficha" <?php if($tipo_busqueda == 'ficha') echo 'selected'; ?>>Buscar por Número de Ficha</option>
-                </select>
-                <input type="text" name="busqueda" placeholder="Ingrese su búsqueda..." value="<?php echo htmlspecialchars($busqueda); ?>">
-                <button type="submit">Buscar</button>
-            </form>
+            <select id="tipo_busqueda">
+                <option value="nombre">Buscar por Nombre</option>
+                <option value="ficha">Buscar por Número de Ficha</option>
+            </select>
+            <input type="text" id="busqueda_clase" placeholder="Ingrese su búsqueda...">
+            <div id="loader_clases" class="loader"></div>
         </div>
         
         <!-- Lista de clases -->
@@ -257,11 +330,11 @@ $tipo_busqueda = isset($_GET['tipo_busqueda']) ? $_GET['tipo_busqueda'] : 'nombr
                         <th>Acciones</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="tabla_clases">
                     <?php
-                    // Construir la consulta según el tipo de búsqueda
+                    // Obtener todas las clases inicialmente
                     $query = "
-                        SELECT c.Id_clase, c.Nom_clase, f.numero_ficha,
+                        SELECT c.Id_clase, c.Nom_clase, f.numero_ficha, f.nombre_ficha,
                         (SELECT COUNT(*) FROM usuarios_clases uc 
                          JOIN usuarios u ON uc.id_user = u.Id_user 
                          WHERE uc.id_clase = c.Id_clase AND u.Id_rol = 2) as total_docentes,
@@ -269,26 +342,12 @@ $tipo_busqueda = isset($_GET['tipo_busqueda']) ? $_GET['tipo_busqueda'] : 'nombr
                          JOIN usuarios u ON uc.id_user = u.Id_user 
                          WHERE uc.id_clase = c.Id_clase AND u.Id_rol = 3) as total_estudiantes
                         FROM clases c
-                        LEFT JOIN fichas f ON c.Nom_clase LIKE CONCAT('%', f.nombre_ficha, '%')
-                        WHERE 1=1
+                        LEFT JOIN fichas f ON c.id_ficha = f.id_ficha
+                        ORDER BY c.Nom_clase
                     ";
                     
-                    $params = [];
-                    
-                    if (!empty($busqueda)) {
-                        if ($tipo_busqueda == 'nombre') {
-                            $query .= " AND c.Nom_clase LIKE ?";
-                            $params[] = "%$busqueda%";
-                        } else if ($tipo_busqueda == 'ficha') {
-                            $query .= " AND f.numero_ficha LIKE ?";
-                            $params[] = "%$busqueda%";
-                        }
-                    }
-                    
-                    $query .= " ORDER BY c.Nom_clase";
-                    
                     $stmt = $con->prepare($query);
-                    $stmt->execute($params);
+                    $stmt->execute();
                     $clases = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     
                     if (count($clases) > 0) {
@@ -301,9 +360,9 @@ $tipo_busqueda = isset($_GET['tipo_busqueda']) ? $_GET['tipo_busqueda'] : 'nombr
                         <td><?php echo $clase['total_docentes']; ?></td>
                         <td><?php echo $clase['total_estudiantes']; ?></td>
                         <td>
-                            <a href="clases.php?clase_id=<?php echo $clase['Id_clase']; ?>" class="action-btn">
+                            <button onclick="mostrarDetallesClase(<?php echo $clase['Id_clase']; ?>)" class="action-btn">
                                 Ver Detalles
-                            </a>
+                            </button>
                         </td>
                     </tr>
                     <?php
@@ -319,175 +378,114 @@ $tipo_busqueda = isset($_GET['tipo_busqueda']) ? $_GET['tipo_busqueda'] : 'nombr
                 </tbody>
             </table>
         </div>
-        
-        <?php
-        // Mostrar detalles de la clase seleccionada
-        if ($clase_id > 0) {
-            $stmt = $con->prepare("
-                SELECT c.Id_clase, c.Nom_clase, f.numero_ficha, f.nombre_ficha
-                FROM clases c
-                LEFT JOIN fichas f ON c.Nom_clase LIKE CONCAT('%', f.nombre_ficha, '%')
-                WHERE c.Id_clase = ?
-            ");
-            $stmt->execute([$clase_id]);
-            $clase_detalle = $stmt->fetch(PDO::FETCH_ASSOC);
-            
-            if ($clase_detalle) {
-        ?>
-        <div class="class-details">
-            <h2>Detalles de la Clase: <?php echo $clase_detalle['Nom_clase']; ?></h2>
-            <?php if ($clase_detalle['numero_ficha']) { ?>
-            <p><strong>Número de Ficha:</strong> <?php echo $clase_detalle['numero_ficha']; ?></p>
-            <?php } ?>
-            
-            <!-- Lista de docentes -->
-            <div class="teachers-list">
-                <h3>Docentes Asignados</h3>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Documento</th>
-                            <th>Nombre</th>
-                            <th>Correo</th>
-                            <th>Teléfono</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php
-                        $stmt = $con->prepare("
-                            SELECT u.Id_user, u.Nombres, u.Correo, u.Telefono
-                            FROM usuarios_clases uc
-                            JOIN usuarios u ON uc.id_user = u.Id_user
-                            WHERE uc.id_clase = ? AND u.Id_rol = 2
-                            ORDER BY u.Nombres
-                        ");
-                        $stmt->execute([$clase_id]);
-                        $docentes = $stmt->fetchAll(PDO::FETCH_ASSOC);
-                        
-                        if (count($docentes) > 0) {
-                            foreach ($docentes as $docente) {
-                        ?>
-                        <tr>
-                            <td><?php echo $docente['Id_user']; ?></td>
-                            <td><?php echo $docente['Nombres']; ?></td>
-                            <td><?php echo $docente['Correo']; ?></td>
-                            <td><?php echo $docente['Telefono']; ?></td>
-                        </tr>
-                        <?php
-                            }
-                        } else {
-                        ?>
-                        <tr>
-                            <td colspan="4" class="no-results">No hay docentes asignados a esta clase</td>
-                        </tr>
-                        <?php
-                        }
-                        ?>
-                    </tbody>
-                </table>
+    </div>
+    
+    <!-- Modal para detalles de clase -->
+    <div id="modalDetallesClase" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="close" onclick="cerrarModal()">&times;</span>
+                <h2 id="modalTitulo">Detalles de la Clase</h2>
             </div>
-            
-            <!-- Lista de estudiantes (paginada) -->
-            <div class="students-list">
-                <h3>Estudiantes Matriculados</h3>
-                <?php
-                // Contar total de estudiantes para la paginación
-                $stmt = $con->prepare("
-                    SELECT COUNT(*) as total
-                    FROM usuarios_clases uc
-                    JOIN usuarios u ON uc.id_user = u.Id_user
-                    WHERE uc.id_clase = ? AND u.Id_rol = 3
-                ");
-                $stmt->execute([$clase_id]);
-                $total_estudiantes = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
-                
-                $total_paginas = ceil($total_estudiantes / $alumnos_por_pagina);
-                $offset = ($pagina_actual - 1) * $alumnos_por_pagina;
-                
-                // Obtener estudiantes para la página actual
-                $stmt = $con->prepare("
-                    SELECT u.Id_user, u.Nombres, u.Correo, u.Telefono, i.docu
-                    FROM usuarios_clases uc
-                    JOIN usuarios u ON uc.id_user = u.Id_user
-                    JOIN identidad i ON u.id_docu = i.id_docu
-                    WHERE uc.id_clase = ? AND u.Id_rol = 3
-                    ORDER BY u.Nombres
-                    LIMIT $alumnos_por_pagina OFFSET $offset
-                ");
-                $stmt->execute([$clase_id]);
-                $estudiantes = $stmt->fetchAll(PDO::FETCH_ASSOC);
-                ?>
-                
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Tipo Documento</th>
-                            <th>Documento</th>
-                            <th>Nombre</th>
-                            <th>Correo</th>
-                            <th>Teléfono</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php
-                        if (count($estudiantes) > 0) {
-                            foreach ($estudiantes as $estudiante) {
-                        ?>
-                        <tr>
-                            <td><?php echo $estudiante['docu']; ?></td>
-                            <td><?php echo $estudiante['Id_user']; ?></td>
-                            <td><?php echo $estudiante['Nombres']; ?></td>
-                            <td><?php echo $estudiante['Correo']; ?></td>
-                            <td><?php echo $estudiante['Telefono']; ?></td>
-                        </tr>
-                        <?php
-                            }
-                        } else {
-                        ?>
-                        <tr>
-                            <td colspan="5" class="no-results">No hay estudiantes matriculados en esta clase</td>
-                        </tr>
-                        <?php
-                        }
-                        ?>
-                    </tbody>
-                </table>
-                
-                <!-- Paginación -->
-                <?php if ($total_paginas > 1) { ?>
-                <div class="pagination">
-                    <?php if ($pagina_actual > 1) { ?>
-                    <a href="clases.php?clase_id=<?php echo $clase_id; ?>&pagina=1">&laquo; Primera</a>
-                    <a href="clases.php?clase_id=<?php echo $clase_id; ?>&pagina=<?php echo $pagina_actual - 1; ?>">&lsaquo; Anterior</a>
-                    <?php } ?>
-                    
-                    <?php
-                    // Mostrar enlaces de página
-                    $rango = 2; // Número de páginas a mostrar antes y después de la actual
-                    
-                    for ($i = max(1, $pagina_actual - $rango); $i <= min($total_paginas, $pagina_actual + $rango); $i++) {
-                        if ($i == $pagina_actual) {
-                            echo "<a class='active'>$i</a>";
-                        } else {
-                            echo "<a href='clases.php?clase_id=$clase_id&pagina=$i'>$i</a>";
-                        }
-                    }
-                    ?>
-                    
-                    <?php if ($pagina_actual < $total_paginas) { ?>
-                    <a href="clases.php?clase_id=<?php echo $clase_id; ?>&pagina=<?php echo $pagina_actual + 1; ?>">Siguiente &rsaquo;</a>
-                    <a href="clases.php?clase_id=<?php echo $clase_id; ?>&pagina=<?php echo $total_paginas; ?>">Última &raquo;</a>
-                    <?php } ?>
-                </div>
-                <?php } ?>
+            <div class="modal-body" id="modalContenido">
+                <!-- El contenido se cargará dinámicamente -->
+            </div>
+            <div class="modal-footer">
+                <button onclick="cerrarModal()" class="action-btn">Cerrar</button>
             </div>
         </div>
-        <?php
-            } else {
-                echo "<div class='no-results'>Clase no encontrada</div>";
+    </div>
+
+    <script>
+        // Función para buscar clases en tiempo real
+        function buscarClases() {
+            const busqueda = document.getElementById('busqueda_clase').value;
+            const tipo = document.getElementById('tipo_busqueda').value;
+            const loader = document.getElementById('loader_clases');
+            
+            // Mostrar indicador de carga
+            loader.style.display = 'inline-block';
+            
+            // Realizar petición AJAX
+            fetch(`buscar_clases.php?busqueda=${encodeURIComponent(busqueda)}&tipo=${tipo}`)
+                .then(response => response.text())
+                .then(data => {
+                    document.getElementById('tabla_clases').innerHTML = data;
+                    loader.style.display = 'none';
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('tabla_clases').innerHTML = '<tr><td colspan="6" class="no-results">Error al buscar clases</td></tr>';
+                    loader.style.display = 'none';
+                });
+        }
+        
+        // Función para mostrar detalles de la clase
+        function mostrarDetallesClase(claseId) {
+            // Hacer una petición AJAX para obtener los detalles
+            fetch('obtener_detalles_clase.php?clase_id=' + claseId)
+                .then(response => response.text())
+                .then(data => {
+                    document.getElementById('modalContenido').innerHTML = data;
+                    document.getElementById('modalDetallesClase').style.display = 'block';
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error al cargar los detalles de la clase');
+                });
+        }
+        
+        // Función para buscar alumnos en tiempo real dentro del modal
+        function buscarAlumnos(claseId) {
+            const busqueda = document.getElementById('busqueda_alumno').value;
+            
+            // Realizar petición AJAX
+            fetch(`buscar_alumnos.php?clase_id=${claseId}&busqueda=${encodeURIComponent(busqueda)}`)
+                .then(response => response.text())
+                .then(data => {
+                    const tablaAlumnos = document.querySelector('#modalContenido .card:last-child table tbody');
+                    if (tablaAlumnos) {
+                        tablaAlumnos.innerHTML = data;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+            
+            return false; // Evitar que se envíe el formulario
+        }
+        
+        // Función para cerrar el modal
+        function cerrarModal() {
+            document.getElementById('modalDetallesClase').style.display = 'none';
+        }
+        
+        // Cerrar el modal si se hace clic fuera de él
+        window.onclick = function(event) {
+            const modal = document.getElementById('modalDetallesClase');
+            if (event.target == modal) {
+                modal.style.display = 'none';
             }
         }
-        ?>
-    </div>
+        
+        // Agregar event listeners para la búsqueda en tiempo real
+        document.addEventListener('DOMContentLoaded', function() {
+            const inputBusqueda = document.getElementById('busqueda_clase');
+            const selectTipo = document.getElementById('tipo_busqueda');
+            
+            // Configurar temporizador para evitar demasiadas peticiones
+            let typingTimer;
+            const doneTypingInterval = 300; // tiempo en ms
+            
+            inputBusqueda.addEventListener('keyup', function() {
+                clearTimeout(typingTimer);
+                if (inputBusqueda.value) {
+                    typingTimer = setTimeout(buscarClases, doneTypingInterval);
+                }
+            });
+            
+            selectTipo.addEventListener('change', buscarClases);
+        });
+    </script>
 </body>
 </html>

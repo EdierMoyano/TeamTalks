@@ -10,7 +10,7 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-// Obtener el usuario administrador - MOVER ESTO AQUÍ ARRIBA
+// Obtener el usuario administrador
 if (isset($_SESSION['documento'])) {
     $admin = $_SESSION['documento'];
     $sql = $con->prepare("SELECT * FROM usuarios WHERE Id_user = ?");
@@ -41,7 +41,7 @@ if (isset($_POST['crear_ficha'])) {
             echo "<script>alert('El número de ficha ya existe');</script>";
         } else {
             try {
-                // Insertar la ficha - SOLO ESTO, nada más
+                // Insertar la ficha
                 $insert = $con->prepare("INSERT INTO fichas (numero_ficha, nombre_ficha) VALUES (?, ?)");
                 $result = $insert->execute([$numero_ficha, $nombre_ficha]);
                 
@@ -59,6 +59,35 @@ if (isset($_POST['crear_ficha'])) {
     }
 }
 
+// Eliminar ficha
+if (isset($_GET['eliminar_ficha'])) {
+    $id_ficha = $_GET['id_ficha'];
+    
+    try {
+        // Verificar si hay clases asociadas a esta ficha
+        $checkClases = $con->prepare("SELECT COUNT(*) as total FROM clases WHERE id_ficha = ?");
+        $checkClases->execute([$id_ficha]);
+        $totalClases = $checkClases->fetch(PDO::FETCH_ASSOC)['total'];
+        
+        if ($totalClases > 0) {
+            echo "<script>alert('No se puede eliminar la ficha porque tiene clases asociadas');</script>";
+        } else {
+            // Eliminar la ficha
+            $delete = $con->prepare("DELETE FROM fichas WHERE id_ficha = ?");
+            $result = $delete->execute([$id_ficha]);
+            
+            if ($result) {
+                echo "<script>alert('Ficha eliminada exitosamente');</script>";
+                echo "<script>window.location = 'fichas.php';</script>";
+            } else {
+                echo "<script>alert('Error al eliminar la ficha');</script>";
+            }
+        }
+    } catch (PDOException $e) {
+        echo "<script>alert('Error: " . str_replace("'", "\\'", $e->getMessage()) . "');</script>";
+    }
+}
+
 // Asignar docente a una ficha
 if (isset($_POST['asignar_docente'])) {
     $id_docente = $_POST['id_docente'];
@@ -70,37 +99,80 @@ if (isset($_POST['asignar_docente'])) {
         echo "<script>alert('Por favor seleccione todos los campos');</script>";
     } else {
         try {
-            // Verificar si ya existe una clase para esta ficha
-            $checkClase = $con->prepare("SELECT Id_clase FROM clases WHERE id_ficha = ?");
-            $checkClase->execute([$id_ficha]);
+            // Obtener información de la ficha
+            $getFicha = $con->prepare("SELECT nombre_ficha, numero_ficha FROM fichas WHERE id_ficha = ?");
+            $getFicha->execute([$id_ficha]);
+            $ficha = $getFicha->fetch(PDO::FETCH_ASSOC);
+            $nombre_ficha = $ficha['nombre_ficha'];
+            $numero_ficha = $ficha['numero_ficha'];
+            
+            // Verificar si ya existe una clase para esta ficha y materia
+            $checkClase = $con->prepare("
+                SELECT c.Id_clase 
+                FROM clases c 
+                WHERE c.id_ficha = ? AND c.Id_materia = ?
+            ");
+            $checkClase->execute([$id_ficha, $id_materia]);
             
             if ($checkClase->rowCount() > 0) {
                 // Usar la clase existente
                 $clase = $checkClase->fetch(PDO::FETCH_ASSOC);
                 $id_clase = $clase['Id_clase'];
             } else {
-                // Verificar si existe la clase con ID 0 (que ya existe en la base de datos)
-                $id_clase = 0; // Usar la clase con ID 0 que ya existe
+                // Crear un nombre para la clase
+                $clase_nombre = "Clase " . $nombre_ficha . " - " . $numero_ficha;
+                
+                // Verificar si hay tareas
+                $checkTareas = $con->prepare("SELECT COUNT(*) as total FROM tareas");
+                $checkTareas->execute();
+                $totalTareas = $checkTareas->fetch(PDO::FETCH_ASSOC)['total'];
+                
+                if ($totalTareas == 0) {
+                    // Crear una tarea predeterminada
+                    $insertTarea = $con->prepare("INSERT INTO tareas (Titulo_tarea, Desc_tarea, Fecha_entreg) VALUES (?, ?, NOW())");
+                    $insertTarea->execute(["Tarea Predeterminada", "Tarea creada automáticamente"]);
+                    $id_tarea = $con->lastInsertId();
+                } else {
+                    // Obtener una tarea existente
+                    $getTarea = $con->prepare("SELECT Id_tarea FROM tareas LIMIT 1");
+                    $getTarea->execute();
+                    $tarea = $getTarea->fetch(PDO::FETCH_ASSOC);
+                    $id_tarea = $tarea['Id_tarea'];
+                }
+                
+                // Generar un nuevo ID para la clase (mayor que 0)
+                $getMaxId = $con->prepare("SELECT MAX(Id_clase) as max_id FROM clases");
+                $getMaxId->execute();
+                $maxId = $getMaxId->fetch(PDO::FETCH_ASSOC)['max_id'];
+                $newId = max(1, $maxId + 1); // Asegurarse de que sea mayor que 0
+                
+                // Insertar la nueva clase (usando solo Id_user, eliminando Id_miembro)
+                $insertClase = $con->prepare("
+                    INSERT INTO clases (Id_clase, Nom_clase, Id_tarea, Id_materia, Id_user, id_ficha) 
+                    VALUES (?, ?, ?, ?, ?, ?)
+                ");
+                $insertClase->execute([$newId, $clase_nombre, $id_tarea, $id_materia, $admin, $id_ficha]);
+                $id_clase = $newId;
             }
             
             // Verificar si ya existe la asignación para este docente, clase y materia
-            $check = $con->prepare("SELECT * FROM usuarios_clases WHERE id_user = ? AND id_clase = ? AND id_materia = ?");
+            $check = $con->prepare("
+                SELECT * FROM usuarios_clases 
+                WHERE id_user = ? AND id_clase = ? AND id_materia = ?
+            ");
             $check->execute([$id_docente, $id_clase, $id_materia]);
             
             if ($check->rowCount() > 0) {
                 echo "<script>alert('El docente ya está asignado a esta ficha para esta materia');</script>";
             } else {
                 // Asignar el docente a la clase
-                $insert = $con->prepare("INSERT INTO usuarios_clases (id_user, id_clase, id_materia) VALUES (?, ?, ?)");
+                $insert = $con->prepare("
+                    INSERT INTO usuarios_clases (id_user, id_clase, id_materia) 
+                    VALUES (?, ?, ?)
+                ");
                 $result = $insert->execute([$id_docente, $id_clase, $id_materia]);
                 
                 if ($result) {
-                    // Actualizar la ficha en la clase si es necesario
-                    if ($id_clase == 0) {
-                        $updateClase = $con->prepare("UPDATE clases SET id_ficha = ? WHERE Id_clase = ?");
-                        $updateClase->execute([$id_ficha, $id_clase]);
-                    }
-                    
                     echo "<script>alert('Docente asignado exitosamente');</script>";
                     echo "<script>window.location = 'fichas.php';</script>";
                 } else {
@@ -114,24 +186,10 @@ if (isset($_POST['asignar_docente'])) {
     }
 }
 
-// Eliminar asignación de docente
-if (isset($_GET['eliminar_asignacion'])) {
-    $id_asignacion = $_GET['id_asignacion'];
-    
-    try {
-        $delete = $con->prepare("DELETE FROM usuarios_clases WHERE id_usuario_clase = ?");
-        $result = $delete->execute([$id_asignacion]);
-        
-        if ($result) {
-            echo "<script>alert('Asignación eliminada exitosamente');</script>";
-            echo "<script>window.location = 'fichas.php';</script>";
-        } else {
-            echo "<script>alert('Error al eliminar la asignación');</script>";
-        }
-    } catch (PDOException $e) {
-        echo "<script>alert('Error: " . str_replace("'", "\\'", $e->getMessage()) . "');</script>";
-    }
-}
+// Obtener todas las fichas para el formulario de asignación
+$stmt = $con->prepare("SELECT * FROM fichas ORDER BY fecha_creacion DESC");
+$stmt->execute();
+$lista_fichas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
 <!DOCTYPE html>
@@ -214,6 +272,70 @@ if (isset($_GET['eliminar_asignacion'])) {
         
         .action-btn {
             margin-right: 5px;
+            display: inline-block;
+            padding: 5px 10px;
+            background-color: #4CAF50;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .action-btn.delete {
+            background-color: #f44336;
+        }
+        
+        .action-btn:hover {
+            opacity: 0.8;
+        }
+        
+        .search-container {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .search-container input[type="text"] {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            flex-grow: 1;
+        }
+        
+        .search-container select {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .search-container button {
+            padding: 8px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .search-container button:hover {
+            background-color: #45a049;
+        }
+        
+        /* Estilos para el indicador de carga */
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 2s linear infinite;
+            display: none;
+            margin-left: 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     </style>
 </head>
@@ -305,6 +427,19 @@ if (isset($_GET['eliminar_asignacion'])) {
                     </form>
                 </div>
                 
+                <!-- Buscador de fichas -->
+                <div class="card">
+                    <h2>Buscar Fichas</h2>
+                    <div class="search-container">
+                        <select id="tipo_busqueda_ficha">
+                            <option value="nombre">Buscar por Nombre</option>
+                            <option value="numero">Buscar por Número</option>
+                        </select>
+                        <input type="text" id="busqueda_ficha" placeholder="Ingrese su búsqueda...">
+                        <div id="loader_fichas" class="loader"></div>
+                    </div>
+                </div>
+                
                 <!-- Tabla de fichas existentes -->
                 <div class="card">
                     <h2>Fichas Existentes</h2>
@@ -315,13 +450,11 @@ if (isset($_GET['eliminar_asignacion'])) {
                                 <th>Número de Ficha</th>
                                 <th>Nombre</th>
                                 <th>Fecha de Creación</th>
+                                <th>Acciones</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody id="tabla_fichas">
                             <?php
-                            $fichas = $con->query("SELECT * FROM fichas ORDER BY fecha_creacion DESC");
-                            $lista_fichas = $fichas->fetchAll(PDO::FETCH_ASSOC);
-                            
                             if (count($lista_fichas) > 0) {
                                 foreach ($lista_fichas as $ficha) {
                             ?>
@@ -330,13 +463,20 @@ if (isset($_GET['eliminar_asignacion'])) {
                                 <td><?php echo $ficha['numero_ficha']; ?></td>
                                 <td><?php echo $ficha['nombre_ficha']; ?></td>
                                 <td><?php echo $ficha['fecha_creacion']; ?></td>
+                                <td>
+                                    <a href="fichas.php?eliminar_ficha=1&id_ficha=<?php echo $ficha['id_ficha']; ?>" 
+                                       onclick="return confirm('¿Está seguro de eliminar esta ficha? Esta acción no se puede deshacer.')" 
+                                       class="action-btn delete">
+                                        Eliminar
+                                    </a>
+                                </td>
                             </tr>
                             <?php
                                 }
                             } else {
                             ?>
                             <tr>
-                                <td colspan="4" style="text-align: center;">No hay fichas registradas</td>
+                                <td colspan="5" style="text-align: center;">No hay fichas registradas</td>
                             </tr>
                             <?php
                             }
@@ -395,84 +535,64 @@ if (isset($_GET['eliminar_asignacion'])) {
                         <button type="submit" name="asignar_docente" class="btn">Asignar Docente</button>
                     </form>
                 </div>
-                
-                <!-- Tabla de asignaciones docentes-fichas -->
-                <div class="card">
-                    <h2>Asignaciones de Docentes a Fichas</h2>
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Ficha</th>
-                                <th>Docente</th>
-                                <th>Materia</th>
-                                <th>Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php
-                            try {
-                                // Consulta simplificada para mostrar asignaciones
-                                $asignaciones = $con->prepare("
-                                    SELECT uc.id_usuario_clase, u.Nombres as nombre_docente, 
-                                           f.nombre_ficha, f.numero_ficha, m.Materia as nombre_materia
-                                    FROM usuarios_clases uc
-                                    JOIN usuarios u ON uc.id_user = u.Id_user
-                                    JOIN clases c ON uc.id_clase = c.Id_clase
-                                    LEFT JOIN fichas f ON c.id_ficha = f.id_ficha
-                                    JOIN materia m ON uc.id_materia = m.Id_materia
-                                    WHERE u.Id_rol = 2
-                                    ORDER BY f.nombre_ficha, u.Nombres
-                                ");
-                                $asignaciones->execute();
-                                $lista_asignaciones = $asignaciones->fetchAll(PDO::FETCH_ASSOC);
-                                
-                                if (count($lista_asignaciones) > 0) {
-                                    foreach ($lista_asignaciones as $asignacion) {
-                                        $ficha_info = !empty($asignacion['nombre_ficha']) ? 
-                                            $asignacion['nombre_ficha'] . " (" . $asignacion['numero_ficha'] . ")" : 
-                                            "Sin ficha asignada";
-                            ?>
-                            <tr>
-                                <td><?php echo $ficha_info; ?></td>
-                                <td><?php echo $asignacion['nombre_docente']; ?></td>
-                                <td><?php echo $asignacion['nombre_materia']; ?></td>
-                                <td>
-                                    <a href="fichas.php?eliminar_asignacion=1&id_asignacion=<?php echo $asignacion['id_usuario_clase']; ?>" 
-                                       onclick="return confirm('¿Está seguro de eliminar esta asignación?')" 
-                                       class="action-btn">
-                                        <img src="../registrousers/styles_registro/delete.png" width="25" height="25" alt="Eliminar">
-                                    </a>
-                                </td>
-                            </tr>
-                            <?php
-                                    }
-                                } else {
-                            ?>
-                            <tr>
-                                <td colspan="4" style="text-align: center;">No hay asignaciones registradas</td>
-                            </tr>
-                            <?php
-                                }
-                            } catch (PDOException $e) {
-                                echo "<tr><td colspan='4' style='text-align: center; color: red;'>Error al cargar asignaciones: " . $e->getMessage() . "</td></tr>";
-                            }
-                            ?>
-                        </tbody>
-                    </table>
-                </div>
             </div>
         </div>
     </div>
 
     <script>
-        // Validación básica del formulario
-        document.querySelector('form[name="crear_ficha"]').addEventListener('submit', function(e) {
-            const numeroFicha = document.getElementById('numero_ficha').value.trim();
-            const nombreFicha = document.getElementById('nombre_ficha').value.trim();
+        // Función para buscar fichas en tiempo real
+        function buscarFichas() {
+            const busqueda = document.getElementById('busqueda_ficha').value;
+            const tipo = document.getElementById('tipo_busqueda_ficha').value;
+            const loader = document.getElementById('loader_fichas');
             
-            if (!numeroFicha || !nombreFicha) {
-                e.preventDefault();
-                alert('Por favor complete todos los campos');
+            // Mostrar indicador de carga
+            loader.style.display = 'inline-block';
+            
+            // Realizar petición AJAX
+            fetch(`buscar_fichas.php?busqueda=${encodeURIComponent(busqueda)}&tipo=${tipo}`)
+                .then(response => response.text())
+                .then(data => {
+                    document.getElementById('tabla_fichas').innerHTML = data;
+                    loader.style.display = 'none';
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('tabla_fichas').innerHTML = '<tr><td colspan="5">Error al buscar fichas</td></tr>';
+                    loader.style.display = 'none';
+                });
+        }
+        
+        // Agregar event listeners para la búsqueda en tiempo real
+        document.addEventListener('DOMContentLoaded', function() {
+            const inputBusqueda = document.getElementById('busqueda_ficha');
+            const selectTipo = document.getElementById('tipo_busqueda_ficha');
+            
+            // Configurar temporizador para evitar demasiadas peticiones
+            let typingTimer;
+            const doneTypingInterval = 300; // tiempo en ms
+            
+            inputBusqueda.addEventListener('keyup', function() {
+                clearTimeout(typingTimer);
+                if (inputBusqueda.value) {
+                    typingTimer = setTimeout(buscarFichas, doneTypingInterval);
+                }
+            });
+            
+            selectTipo.addEventListener('change', buscarFichas);
+            
+            // Validación básica del formulario
+            const formCrearFicha = document.querySelector('form[name="crear_ficha"]');
+            if (formCrearFicha) {
+                formCrearFicha.addEventListener('submit', function(e) {
+                    const numeroFicha = document.getElementById('numero_ficha').value.trim();
+                    const nombreFicha = document.getElementById('nombre_ficha').value.trim();
+                    
+                    if (!numeroFicha || !nombreFicha) {
+                        e.preventDefault();
+                        alert('Por favor complete todos los campos');
+                    }
+                });
             }
         });
     </script>

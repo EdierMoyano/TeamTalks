@@ -8,27 +8,43 @@ $con = $database->connect();
 if (isset($_POST['subir'])) {
     if (isset($_FILES['csv_file']) && $_FILES['csv_file']['size'] > 0) {
         $fileName = $_FILES['csv_file']['tmp_name'];
-        $file = fopen($fileName, "r");
-
+        
+        // Leer el contenido del archivo
+        $fileContent = file_get_contents($fileName);
+        
+        // Detectar el tipo de fin de línea (Windows o Unix)
+        $lineEnding = (strpos($fileContent, "\r\n") !== false) ? "\r\n" : "\n";
+        
+        // Dividir el contenido en líneas
+        $lines = explode($lineEnding, $fileContent);
+        
         // Contador para seguimiento de filas procesadas
         $contador = 0;
         $errores = 0;
         $mensajes_error = [];
-
-        // Leer la primera línea para verificar si son encabezados
-        $primera_linea = fgetcsv($file, 10000, ";");
+        $usuarios_procesados = 0;
         
-        // Si la primera columna es "Id_user", asumimos que es una línea de encabezados y la ignoramos
+        // Verificar si la primera línea es un encabezado
+        $primera_linea = explode(";", $lines[0]);
         $es_encabezado = false;
-        if ($primera_linea && isset($primera_linea[0]) && strtolower($primera_linea[0]) === 'id_user') {
+        
+        if (isset($primera_linea[0]) && strtolower($primera_linea[0]) === 'id_user') {
             $es_encabezado = true;
-        } else {
-            // Si no es encabezado, rebobinamos el archivo para leer desde el principio
-            rewind($file);
+            // Saltar la primera línea si es un encabezado
+            array_shift($lines);
         }
-
-        while (($column = fgetcsv($file, 10000, ";")) !== FALSE) {
+        
+        // Procesar cada línea
+        foreach ($lines as $line) {
             $contador++;
+            
+            // Saltar líneas vacías
+            if (trim($line) === '') {
+                continue;
+            }
+            
+            // Dividir la línea por punto y coma
+            $column = explode(";", $line);
             
             // Verificar si hay al menos 9 columnas (formato original)
             if (count($column) >= 9) { 
@@ -44,8 +60,15 @@ if (isset($_POST['subir'])) {
                 $id_docu = trim($column[8]); 
                 
                 // La ficha es opcional - si existe una columna 10, la usamos
-                // Reemplazamos comas por puntos en el número de ficha
-                $numero_ficha = (count($column) >= 10) ? str_replace(',', '.', trim($column[9])) : null;
+                $numero_ficha = (count($column) >= 10) ? trim($column[9]) : null;
+                
+                // Verificar que los campos no estén vacíos
+                if (empty($id_user) || empty($nombres) || empty($correo) || empty($password) || 
+                    empty($id_rol) || empty($id_estado) || empty($id_docu)) {
+                    $mensajes_error[] = "Fila $contador: Faltan campos obligatorios.";
+                    $errores++;
+                    continue;
+                }
                 
                 // Verificar que los campos numéricos sean realmente números
                 if (!is_numeric($id_user)) {
@@ -97,6 +120,13 @@ if (isset($_POST['subir'])) {
                     $mensajes_error[] = "Fila $contador: Documento inválido ($id_docu) para usuario: $id_user";
                     $errores++;
                     continue; 
+                }
+                
+                // Si es estudiante (rol 3), verificar que tenga ficha
+                if ($id_rol == 3 && empty($numero_ficha)) {
+                    $mensajes_error[] = "Fila $contador: El estudiante con ID $id_user debe tener una ficha asignada.";
+                    $errores++;
+                    continue;
                 }
                 
                 // Si es estudiante y tiene ficha, verificar que la ficha exista
@@ -160,23 +190,87 @@ if (isset($_POST['subir'])) {
                         $ficha = $getFicha->fetch(PDO::FETCH_ASSOC);
                         
                         if ($ficha) {
-                            // Buscar la clase asociada a esta ficha
-                            $clase_nombre = "Clase " . $ficha['nombre_ficha'];
-                            $getClase = $con->prepare("SELECT * FROM clases WHERE Nom_clase = ?");
-                            $getClase->execute([$clase_nombre]);
+                            $id_ficha = $ficha['id_ficha'];
                             
-                            if ($getClase->rowCount() > 0) {
-                                $clase = $getClase->fetch(PDO::FETCH_ASSOC);
-                                $id_clase = $clase['Id_clase'];
+                            // Buscar todas las clases asociadas a esta ficha
+                            $getClases = $con->prepare("SELECT * FROM clases WHERE id_ficha = ?");
+                            $getClases->execute([$id_ficha]);
+                            $clases = $getClases->fetchAll(PDO::FETCH_ASSOC);
+                            
+                            if (count($clases) > 0) {
+                                // Hay clases existentes para esta ficha
+                                foreach ($clases as $clase) {
+                                    $id_clase = $clase['Id_clase'];
+                                    $id_materia = $clase['Id_materia'];
+                                    
+                                    // Verificar si el estudiante ya está asignado a esta clase
+                                    $checkAsignacion = $con->prepare("SELECT * FROM usuarios_clases WHERE id_user = ? AND id_clase = ?");
+                                    $checkAsignacion->execute([$id_user, $id_clase]);
+                                    
+                                    if ($checkAsignacion->rowCount() == 0) {
+                                        // Asignar el estudiante a la clase
+                                        $insertAsignacion = $con->prepare("INSERT INTO usuarios_clases (id_user, id_clase, id_materia) VALUES (?, ?, ?)");
+                                        $insertAsignacion->execute([$id_user, $id_clase, $id_materia]);
+                                        
+                                        // Registrar en el log
+                                        $mensajes_error[] = "INFO: Usuario $id_user asignado a clase existente $id_clase con materia $id_materia";
+                                    } else {
+                                        $mensajes_error[] = "INFO: Usuario $id_user ya estaba asignado a clase $id_clase";
+                                    }
+                                }
+                            } else {
+                                // No hay clases para esta ficha, crear una clase predeterminada
+                                $clase_nombre = "Clase " . $ficha['nombre_ficha'];
                                 
-                                // Verificar si el estudiante ya está asignado a esta clase
-                                $checkAsignacion = $con->prepare("SELECT * FROM usuarios_clases WHERE id_user = ? AND id_clase = ?");
-                                $checkAsignacion->execute([$id_user, $id_clase]);
+                                // Verificar si hay tareas
+                                $checkTareas = $con->prepare("SELECT COUNT(*) as total FROM tareas");
+                                $checkTareas->execute();
+                                $totalTareas = $checkTareas->fetch(PDO::FETCH_ASSOC)['total'];
                                 
-                                if ($checkAsignacion->rowCount() == 0) {
+                                if ($totalTareas == 0) {
+                                    // Crear una tarea predeterminada
+                                    $insertTarea = $con->prepare("INSERT INTO tareas (Titulo_tarea, Desc_tarea, Fecha_entreg) VALUES (?, ?, NOW())");
+                                    $insertTarea->execute(["Tarea Predeterminada", "Tarea creada automáticamente"]);
+                                    $id_tarea = $con->lastInsertId();
+                                } else {
+                                    // Obtener una tarea existente
+                                    $getTarea = $con->prepare("SELECT Id_tarea FROM tareas LIMIT 1");
+                                    $getTarea->execute();
+                                    $tarea = $getTarea->fetch(PDO::FETCH_ASSOC);
+                                    $id_tarea = $tarea['Id_tarea'];
+                                }
+                                
+                                // Obtener materias
+                                $getMaterias = $con->prepare("SELECT Id_materia FROM materia LIMIT 1");
+                                $getMaterias->execute();
+                                
+                                if ($getMaterias->rowCount() > 0) {
+                                    $materia = $getMaterias->fetch(PDO::FETCH_ASSOC);
+                                    $id_materia = $materia['Id_materia'];
+                                    
+                                    // Generar un nuevo ID para la clase (mayor que 0)
+                                    $getMaxId = $con->prepare("SELECT MAX(Id_clase) as max_id FROM clases");
+                                    $getMaxId->execute();
+                                    $maxId = $getMaxId->fetch(PDO::FETCH_ASSOC)['max_id'];
+                                    $newId = max(1, ($maxId ? $maxId : 0) + 1); // Asegurarse de que sea mayor que 0
+                                    
+                                    // Insertar la nueva clase
+                                    $insertClase = $con->prepare("
+                                        INSERT INTO clases (Id_clase, Nom_clase, Id_tarea, Id_materia, Id_user, id_ficha) 
+                                        VALUES (?, ?, ?, ?, ?, ?)
+                                    ");
+                                    $insertClase->execute([$newId, $clase_nombre, $id_tarea, $id_materia, $_SESSION['documento'], $id_ficha]);
+                                    $id_clase = $newId;
+                                    
                                     // Asignar el estudiante a la clase
-                                    $insertAsignacion = $con->prepare("INSERT INTO usuarios_clases (id_user, id_clase) VALUES (?, ?)");
-                                    $insertAsignacion->execute([$id_user, $id_clase]);
+                                    $insertAsignacion = $con->prepare("INSERT INTO usuarios_clases (id_user, id_clase, id_materia) VALUES (?, ?, ?)");
+                                    $insertAsignacion->execute([$id_user, $id_clase, $id_materia]);
+                                    
+                                    // Registrar en el log
+                                    $mensajes_error[] = "INFO: Creada nueva clase $id_clase ($clase_nombre) para ficha $numero_ficha y asignado usuario $id_user";
+                                } else {
+                                    $mensajes_error[] = "ERROR: No se encontraron materias en el sistema para crear una clase para la ficha $numero_ficha";
+                                    throw new Exception("No se encontraron materias en el sistema");
                                 }
                             }
                         }
@@ -184,6 +278,7 @@ if (isset($_POST['subir'])) {
                     
                     // Confirmar la transacción
                     $con->commit();
+                    $usuarios_procesados++;
                     
                 } catch (Exception $e) {
                     // Revertir la transacción en caso de error
@@ -192,23 +287,25 @@ if (isset($_POST['subir'])) {
                     $errores++;
                 }
             } else {
-                $mensajes_error[] = "Fila $contador tiene formato incorrecto: " . count($column) . " columnas";
-                $errores++;
+                // Solo reportar error si la línea no está vacía
+                if (trim($line) !== '') {
+                    $mensajes_error[] = "Fila $contador tiene formato incorrecto: " . count($column) . " columnas. Contenido: " . htmlspecialchars($line);
+                    $errores++;
+                }
             }
         }
-        fclose($file);
         
         // Guardar los mensajes de error en la sesión para mostrarlos
-        if ($errores > 0) {
+        if ($errores > 0 || !empty($mensajes_error)) {
             $_SESSION['csv_errores'] = $mensajes_error;
             echo "<script>
-                console.log('Errores encontrados:');
-                " . implode("\n", array_map(function($msg) { return "console.log('$msg');"; }, $mensajes_error)) . "
-                alert('Proceso completado con $errores errores. Revise la consola para más detalles.');
+                console.log('Información del proceso:');
+                " . implode("\n", array_map(function($msg) { return "console.log('" . str_replace("'", "\\'", $msg) . "');"; }, $mensajes_error)) . "
+                alert('Proceso completado con $errores errores y $usuarios_procesados usuarios procesados correctamente. Revise la consola para más detalles.');
                 window.location = 'index.php';
             </script>";
         } else {
-            echo "<script>alert('Usuarios cargados exitosamente');</script>";
+            echo "<script>alert('$usuarios_procesados usuarios cargados exitosamente');</script>";
             echo "<script>window.location = 'index.php';</script>";
         }
     } else {

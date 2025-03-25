@@ -18,36 +18,66 @@ if (isset($_POST['ingreso'])) {
     $avatar = NULL;
     $rol = $_POST['rol'];
     $estado = $_POST['estado'];
-    $ficha = isset($_POST['ficha']) ? trim($_POST['ficha']) : ''; // Nuevo campo ficha
+    $ficha = isset($_POST['ficha']) ? trim($_POST['ficha']) : '';
 
-    $sql4 = $con->prepare("SELECT * FROM usuarios WHERE Id_user = ? AND Correo = ?");
-    $sql4->execute([$docu, $correo]);
+    // Validaciones
+    $errores = [];
+
+    // Verificar que los campos obligatorios no estén vacíos
+    if (empty($tipo) || empty($docu) || empty($name) || empty($correo) || empty($password) || empty($tel) || empty($rol) || empty($estado)) {
+        $errores[] = "Todos los campos son obligatorios excepto la ficha para roles diferentes a estudiante.";
+    }
+
+    // Verificar que el ID sea numérico
+    if (!is_numeric($docu)) {
+        $errores[] = "El documento debe ser un número.";
+    }
+
+    // Verificar que el correo tenga formato válido
+    if (!filter_var($correo, FILTER_VALIDATE_EMAIL)) {
+        $errores[] = "El correo electrónico no tiene un formato válido.";
+    }
+
+    // Verificar que el teléfono sea numérico
+    if (!is_numeric($tel)) {
+        $errores[] = "El teléfono debe ser un número.";
+    }
+
+    // Si es estudiante, verificar que tenga ficha
+    if ($rol == 3 && empty($ficha)) {
+        $errores[] = "Los estudiantes deben tener una ficha asignada.";
+    }
+
+    // Si tiene ficha, verificar que exista
+    if (!empty($ficha)) {
+        $checkFicha = $con->prepare("SELECT * FROM fichas WHERE numero_ficha = ?");
+        $checkFicha->execute([$ficha]);
+        if ($checkFicha->rowCount() == 0) {
+            $errores[] = "La ficha ingresada no existe en el sistema.";
+        }
+    }
+
+    // Verificar si el usuario ya existe
+    $sql4 = $con->prepare("SELECT * FROM usuarios WHERE Id_user = ?");
+    $sql4->execute([$docu]);
     $user = $sql4->fetch();
 
     if($user) {
         echo "<script>alert('El usuario ya está registrado');</script>";
         echo "<script>window.location = 'index.php';</script>";
+    } else if (!empty($errores)) {
+        // Mostrar errores
+        echo "<script>alert('Se encontraron los siguientes errores:\\n- " . implode("\\n- ", $errores) . "');</script>";
     } else {
-        // Verificar si la ficha existe cuando es estudiante y se proporciona una ficha
-        if ($rol == 3 && !empty($ficha)) {
-            $checkFicha = $con->prepare("SELECT * FROM fichas WHERE numero_ficha = ?");
-            $checkFicha->execute([$ficha]);
-            if ($checkFicha->rowCount() == 0) {
-                echo "<script>alert('La ficha $ficha no existe. Debe crear la ficha antes de registrar estudiantes con esta ficha.');</script>";
-                echo "<script>window.location = 'index.php';</script>";
-                exit;
-            }
-        }
-
         // Iniciar transacción
         $con->beginTransaction();
         
         try {
             // Insertar usuario
-            $ing = $con->prepare("INSERT INTO usuarios(Id_user, Nombres, Correo, Contrasena, Avatar, Telefono, Id_rol, Id_estado, id_docu, fecha_registro,ficha)VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?,?, NOW())");
+            $ing = $con->prepare("INSERT INTO usuarios(Id_user, Nombres, Correo, Contrasena, Avatar, Telefono, Id_rol, Id_estado, id_docu, fecha_registro)VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
             $ing->execute([$docu, $name, $correo, $contra, $avatar, $tel, $rol, $estado, $tipo]);
             
-            // Si es estudiante y tiene ficha, asignarlo a la clase correspondiente
+            // Si es estudiante y tiene ficha, asignarlo a las clases correspondientes
             if ($rol == 3 && !empty($ficha)) {
                 // Obtener la ficha
                 $getFicha = $con->prepare("SELECT * FROM fichas WHERE numero_ficha = ?");
@@ -55,18 +85,79 @@ if (isset($_POST['ingreso'])) {
                 $ficha_data = $getFicha->fetch(PDO::FETCH_ASSOC);
                 
                 if ($ficha_data) {
-                    // Buscar la clase asociada a esta ficha
-                    $clase_nombre = "Clase " . $ficha_data['nombre_ficha'];
-                    $getClase = $con->prepare("SELECT * FROM clases WHERE Nom_clase = ?");
-                    $getClase->execute([$clase_nombre]);
+                    $id_ficha = $ficha_data['id_ficha'];
                     
-                    if ($getClase->rowCount() > 0) {
-                        $clase = $getClase->fetch(PDO::FETCH_ASSOC);
-                        $id_clase = $clase['Id_clase'];
+                    // Buscar todas las clases asociadas a esta ficha
+                    $getClases = $con->prepare("SELECT * FROM clases WHERE id_ficha = ?");
+                    $getClases->execute([$id_ficha]);
+                    $clases = $getClases->fetchAll(PDO::FETCH_ASSOC);
+                    
+                    if (count($clases) > 0) {
+                        // Hay clases existentes para esta ficha
+                        foreach ($clases as $clase) {
+                            $id_clase = $clase['Id_clase'];
+                            $id_materia = $clase['Id_materia'];
+                            
+                            // Verificar si el estudiante ya está asignado a esta clase
+                            $checkAsignacion = $con->prepare("SELECT * FROM usuarios_clases WHERE id_user = ? AND id_clase = ?");
+                            $checkAsignacion->execute([$docu, $id_clase]);
+                            
+                            if ($checkAsignacion->rowCount() == 0) {
+                                // Asignar el estudiante a la clase
+                                $insertAsignacion = $con->prepare("INSERT INTO usuarios_clases (id_user, id_clase, id_materia) VALUES (?, ?, ?)");
+                                $insertAsignacion->execute([$docu, $id_clase, $id_materia]);
+                            }
+                        }
+                    } else {
+                        // No hay clases para esta ficha, crear una clase predeterminada
+                        $clase_nombre = "Clase " . $ficha_data['nombre_ficha'];
                         
-                        // Asignar el estudiante a la clase
-                        $insertAsignacion = $con->prepare("INSERT INTO usuarios_clases (id_user, id_clase) VALUES (?, ?)");
-                        $insertAsignacion->execute([$docu, $id_clase]);
+                        // Verificar si hay tareas
+                        $checkTareas = $con->prepare("SELECT COUNT(*) as total FROM tareas");
+                        $checkTareas->execute();
+                        $totalTareas = $checkTareas->fetch(PDO::FETCH_ASSOC)['total'];
+                        
+                        if ($totalTareas == 0) {
+                            // Crear una tarea predeterminada
+                            $insertTarea = $con->prepare("INSERT INTO tareas (Titulo_tarea, Desc_tarea, Fecha_entreg) VALUES (?, ?, NOW())");
+                            $insertTarea->execute(["Tarea Predeterminada", "Tarea creada automáticamente"]);
+                            $id_tarea = $con->lastInsertId();
+                        } else {
+                            // Obtener una tarea existente
+                            $getTarea = $con->prepare("SELECT Id_tarea FROM tareas LIMIT 1");
+                            $getTarea->execute();
+                            $tarea = $getTarea->fetch(PDO::FETCH_ASSOC);
+                            $id_tarea = $tarea['Id_tarea'];
+                        }
+                        
+                        // Obtener materias
+                        $getMaterias = $con->prepare("SELECT Id_materia FROM materia LIMIT 1");
+                        $getMaterias->execute();
+                        
+                        if ($getMaterias->rowCount() > 0) {
+                            $materia = $getMaterias->fetch(PDO::FETCH_ASSOC);
+                            $id_materia = $materia['Id_materia'];
+                            
+                            // Generar un nuevo ID para la clase (mayor que 0)
+                            $getMaxId = $con->prepare("SELECT MAX(Id_clase) as max_id FROM clases");
+                            $getMaxId->execute();
+                            $maxId = $getMaxId->fetch(PDO::FETCH_ASSOC)['max_id'];
+                            $newId = max(1, ($maxId ? $maxId : 0) + 1); // Asegurarse de que sea mayor que 0
+                            
+                            // Insertar la nueva clase
+                            $insertClase = $con->prepare("
+                                INSERT INTO clases (Id_clase, Nom_clase, Id_tarea, Id_materia, Id_user, id_ficha) 
+                                VALUES (?, ?, ?, ?, ?, ?)
+                            ");
+                            $insertClase->execute([$newId, $clase_nombre, $id_tarea, $id_materia, $_SESSION['documento'], $id_ficha]);
+                            $id_clase = $newId;
+                            
+                            // Asignar el estudiante a la clase
+                            $insertAsignacion = $con->prepare("INSERT INTO usuarios_clases (id_user, id_clase, id_materia) VALUES (?, ?, ?)");
+                            $insertAsignacion->execute([$docu, $id_clase, $id_materia]);
+                        } else {
+                            throw new Exception("No se encontraron materias en el sistema");
+                        }
                     }
                 }
             }
@@ -79,7 +170,7 @@ if (isset($_POST['ingreso'])) {
         } catch (Exception $e) {
             // Revertir la transacción en caso de error
             $con->rollBack();
-            echo "<script>alert('Error al registrar el usuario: " . $e->getMessage() . "');</script>";
+            echo "<script>alert('Error al registrar el usuario: " . str_replace("'", "\\'", $e->getMessage()) . "');</script>";
             echo "<script>window.location = 'index.php';</script>";
         }
     }
