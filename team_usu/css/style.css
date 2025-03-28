@@ -188,15 +188,7 @@ header {
     padding-left: 1.5rem;
     background-color: var(--secondary-light);
   }
-  .profile-dropdown-btn span h5 {
-    margin: 0; /* Elimina márgenes innecesarios */
-    font-size: 14px; /* Ajusta el tamaño del texto */
-    font-weight: bold; /* Negrita para destacar */
-    color: var(--black); /* Color del texto */
-    white-space: nowrap; /* Evita que el texto salte de línea */
-    text-overflow: ellipsis; /* Recorta texto largo con "..." */
-    overflow: hidden;
-}
+
   /* Main Content */
 main {
   text-align: left;

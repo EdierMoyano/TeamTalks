@@ -45,10 +45,7 @@ if (isset($_SESSION['documento'])) {
                     <i class="fa-solid fa-circle"></i>
                 </div>
                 <span>
-                
-                <h5>
                 <?php echo isset($fila['Nombres']) ? $fila['Nombres'] : 'Invitado'; ?>
-                </h5>
                 <i class="fa-solid fa-angle-down"></i>
                 </span>
             </div>

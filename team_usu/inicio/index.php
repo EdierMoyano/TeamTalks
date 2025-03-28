@@ -14,9 +14,7 @@ if (isset($_SESSION['documento'])) {
 } else {
     $fila = null; // Para evitar errores si no hay sesión
 }
-
 ?>
-
 
 <!DOCTYPE html>
 <html lang="en">
@@ -47,11 +45,8 @@ if (isset($_SESSION['documento'])) {
                     <i class="fa-solid fa-circle"></i>
                 </div>
                 <span>
-                
-                <h5>
-                <?php echo isset($fila['Nombres']) ? $fila['Nombres'] : 'Invitado'; ?>
-                </h5>
-                <i class="fa-solid fa-angle-down"></i>
+                <?php echo isset($fila['Nombres']) ? $fila['Nombres'] : 'Invitado'; ?> 
+                    <i class="fa-solid fa-angle-down"></i>
                 </span>
             </div>
             <ul class="profile-dropdown-list">
@@ -75,7 +70,7 @@ if (isset($_SESSION['documento'])) {
                 </li>
                 <hr />
                 <li class="profile-dropdown-list-item">
-                    <a href="#">
+                    <a href="../../includes/close.php">
                         <i class="fa-solid fa-arrow-right-from-bracket"></i>
                         Cerrar Sesion
                     </a>
