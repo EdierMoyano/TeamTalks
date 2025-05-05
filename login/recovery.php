@@ -21,10 +21,10 @@ if (isset($_POST['submit'])) {
             $_SESSION['email'] = $fila['Correo'];
             // Redirigir con los datos usando POST
             echo '<form id="sendForm" action="enviar_recuperacion.php" method="POST">
-                      <input type="hidden" name="correo" value="' . htmlspecialchars($correo) . '">
-                      <input type="hidden" name="docu" value="' . htmlspecialchars($documento) . '">
-                  </form>
-                  <script>document.getElementById("sendForm").submit();</script>';
+                    <input type="hidden" name="correo" value="' . htmlspecialchars($correo) . '">
+                    <input type="hidden" name="docu" value="' . htmlspecialchars($documento) . '">
+                </form>
+                <script>docuxment.getElementById("sendForm").submit();</script>';
             exit;
         } else {
             echo '<script>alert("Correo o número de documento incorrectos");</script>';

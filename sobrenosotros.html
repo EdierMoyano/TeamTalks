@@ -5,26 +5,298 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sobre Nosotros</title>
     <link rel="icon" href="../styles/icon2.png">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-KK94CHFLLe+nY2dmCWGMq91rCGa5gtU4mk92HdvYe+M/SXH301p5ILy+dN9+nJOZ" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    
-    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="/css/stylesaboutwe.css">
+    <style>
+        /* Estilos personalizados para mantener la apariencia original */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        
+        header {
+            padding: 15px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .logo {
+            height: 100px;
+            width: auto;
+        }
+        
+        .nav-links {
+            list-style: none;
+            display: flex;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .nav-links li {
+            margin-right: 20px;
+        }
+        
+        .nav-links a {
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+        }
+        
+        .nav-links a:hover, .nav-links a.sobre {
+            color: #0E4A86;
+        }
+        
+        .iniciar-sesion {
+            background-color: #0E4A86;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        
+        main {
+            padding: 50px 10%;
+        }
+        
+        .content {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .content h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+        }
+        
+        .content h2 {
+            font-weight: normal;
+            font-size: 1.5rem;
+            margin-bottom: 30px;
+        }
+        
+        .content h2 strong {
+            color: #0E4A86;
+        }
+        
+        .images {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 40px;
+        }
+        
+        .large-image {
+            max-width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .franja {
+            background-color: #f5f5f5;
+            padding: 50px 0;
+            margin-bottom: 40px;
+        }
+        
+        .contenedor {
+            display: flex;
+            justify-content: space-around;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .tarjeta {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            width: 45%;
+            text-align: center;
+        }
+        
+        .tarjeta h2 {
+            color: #0E4A86;
+            margin-bottom: 15px;
+        }
+        
+        .content2 {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+        
+        .content2 h2 {
+            font-size: 1.8rem;
+            margin-bottom: 40px;
+        }
+        
+        .content2 h2 strong {
+            color: #0E4A86;
+        }
+        
+        .items-container {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+        }
+        
+        .item {
+            width: 30%;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .item img {
+            width: 80px;
+            margin-bottom: 15px;
+        }
+        
+        .item h3 {
+            color: #0E4A86;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+        
+        .item h4 {
+            font-weight: normal;
+            font-size: 1rem;
+            line-height: 1.5;
+        }
+        
+        /* Estilos responsive */
+        @media (max-width: 992px) {
+            .contenedor {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .tarjeta {
+                width: 80%;
+                margin-bottom: 20px;
+            }
+            
+            .items-container {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .item {
+                width: 80%;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            main {
+                padding: 30px 5%;
+            }
+            
+            .content h1 {
+                font-size: 2rem;
+            }
+            
+            .content h2 {
+                font-size: 1.3rem;
+            }
+            
+            .tarjeta {
+                width: 90%;
+                padding: 20px;
+            }
+            
+            .item {
+                width: 90%;
+            }
+        }
+        
+        /* Estilos para el navbar responsive */
+        .navbar-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 10%;
+        }
+        
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        
+        .nav-container {
+            display: flex;
+            align-items: center;
+        }
+        
+        @media (max-width: 768px) {
+            .menu-toggle {
+                display: block;
+            }
+            
+            .nav-container {
+                position: fixed;
+                top: 70px;
+                left: -100%;
+                width: 100%;
+                height: auto;
+                background-color: white;
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 20px;
+                box-shadow: 0 5px 10px rgba(0,0,0,0.1);
+                transition: left 0.3s ease;
+                z-index: 1000;
+            }
+            
+            .nav-container.active {
+                left: 0;
+            }
+            
+            .nav-links {
+                flex-direction: column;
+                width: 100%;
+            }
+            
+            .nav-links li {
+                margin-right: 0;
+                margin-bottom: 15px;
+            }
+            
+            .iniciar-sesion {
+                margin-top: 15px;
+            }
+        }
+        
+        /* Estilos para el footer */
+        .social-link:hover {
+            opacity: 0.8;
+        }
+    </style>
 </head>
 <body>
     <header>
-        <div class="logo-container">
+        <div class="navbar-container">
             <img src="img/logo.png" alt="TeamTalks Logo" class="logo">
-            <nav>
-                <ul class="nav-links">
-                    <li><a href="index.html">Inicio</a></li>
-                    <li><a class="sobre" href="sobrenosotros.html">Sobre nosotros</a></li>
-                    <li><a href="contactanos.html">Contáctanos</a></li>
-                </ul>
-            </nav>
-            <a href="login/login.php"><button class="btn iniciar-sesion">Iniciar sesión</button></a>
+            
+            <button class="menu-toggle" id="menuToggle">
+                <i class="fas fa-bars"></i>
+            </button>
+            
+            <div class="nav-container" id="navContainer">
+                <nav>
+                    <ul class="nav-links">
+                        <li><a href="index.html">Inicio</a></li>
+                        <li><a class="sobre" href="sobrenosotros.html">Sobre nosotros</a></li>
+                        <li><a href="contactanos.html">Contáctanos</a></li>
+                    </ul>
+                </nav>
+                <a href="login/login.php"><button class="btn iniciar-sesion">Iniciar sesión</button></a>
+            </div>
         </div>
     </header>
+    
     <main>
         <div class="content">
             <h1>Unidos en un mismo lugar</h1>
@@ -66,6 +338,7 @@
             </div>
         </div>        
     </main>
+    
     <footer style="background-color: #0E4A86;" class="text-dark pt-5 pb-4">
         <div class="container text-center text-md-start">
             <div class="row text-center text-md-start">
@@ -152,5 +425,28 @@
             </div>
         </div>
     </footer>
+
+    <!-- JS de Bootstrap -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Script para el menú responsive -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const menuToggle = document.getElementById('menuToggle');
+            const navContainer = document.getElementById('navContainer');
+            
+            menuToggle.addEventListener('click', function() {
+                navContainer.classList.toggle('active');
+            });
+            
+            // Cerrar el menú al hacer clic en un enlace
+            const navLinks = document.querySelectorAll('.nav-links a');
+            navLinks.forEach(link => {
+                link.addEventListener('click', function() {
+                    navContainer.classList.remove('active');
+                });
+            });
+        });
+    </script>
 </body>
 </html>

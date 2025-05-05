@@ -46,10 +46,7 @@ if (isset($_SESSION['documento'])) {
                     <i class="fa-solid fa-circle"></i>
                 </div>
                 <span>
-                
-                <h5>
                 <?php echo isset($fila['Nombres']) ? $fila['Nombres'] : 'Invitado'; ?>
-                </h5>
                 <i class="fa-solid fa-angle-down"></i>
                 </span>
             </div>
@@ -77,41 +74,6 @@ if (isset($_SESSION['documento'])) {
                     <a href="#">
                         <i class="fa-solid fa-arrow-right-from-bracket"></i>
                         Cerrar Sesion
-                    </a>
-                </li>
-            </ul>
-        </div>
-    </div>
-    <div class="sidebar" id="sidebar">
-        <div class="header">
-            <div class="menu-btn" id="menu-btn">
-                <i class="bx bx-chevron-left"></i>
-            </div>
-            <div class="brand">
-                <img src="img/logo.png" alt="logo">
-                <span>TeamTalks</span>
-            </div>
-        </div>
-        <div class="menu-container">
-            <ul class="menu">
-                <li class="menu-item menu-item-static active">
-                    <a href="#" class="menu-link">
-                        <i class="bx bx-home-alt-2"></i>
-                        <span>Clases Inscritas</span>
-                    </a>
-                </li>
-    
-                <li class="menu-item menu-item-static">
-                    <a href="#" class="menu-link">
-                    <i class='bx bx-book-bookmark'></i>
-                        <span>Actividades</span>
-                    </a>
-                </li>
-    
-                <li class="menu-item menu-item-static">
-                    <a href="#" class="menu-link">
-                        <i class="bx bx-task"></i>
-                        <span>Mis Calificaciones</span>
                     </a>
                 </li>
             </ul>

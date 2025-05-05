@@ -57,56 +57,59 @@ $usuarios = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
             <!-- Menu Dashboard -->
             <div class="menu">
-    <div class="enlace">
-        <i class='bx bx-grid-alt'></i>
-        <a href="admin.php" class="boton-menu">Dashboard</a>
-    </div>
-    <div class="enlace">
-        <i class='bx bx-user'></i>
-        <a href="usersactivos/index.php" class="boton-menu">Usuarios Activos</a>
-    </div>
-    <div class="enlace">
-        <i class='bx bx-user-x'></i>
-        <a href="usersinactivos/index.php" class="boton-menu">Usuarios Inactivos</a>
-    </div>
-    <div class="enlace">
-    <i class='bx bx-user-plus'></i>
-    <a href="registrousers/index.php" class="boton-menu">Registrar Usuarios</a>
-</div>
-
-    <div class="enlace">
-        <i class='bx bx-book'></i>
-        <a href="#" class="boton-menu">Clases</a>
-    </div>
-    <div class="enlace">
-        <i class='bx bx-library'></i>
-        <a href="#" class="boton-menu">Materias</a>
-    </div>
-    <div class="enlace">
-        <i class='bx bx-conversation'></i>
-        <a href="#" class="boton-menu">Temas Foros</a>
-    </div>
-    <div class="enlace">
-        <i class='bx bx-time'></i>
-        <a href="#" class="boton-menu">Horarios</a>
-    </div>
-    <div class="enlace">
-        <i class='bx bx-line-chart'></i>
-        <a href="#" class="boton-menu">Analíticas</a>
-    </div>
-    <div class="enlace">
-        <i class='bx bx-file'></i>
-        <a href="#" class="boton-menu">Reportes</a>
-    </div>
-    <div class="enlace">
-        <i class='bx bx-shield'></i>
-        <a href="#" class="boton-menu">Seguridad</a>
-    </div>
-    <div class="enlace">
-        <i class='bx bx-log-out'></i>
-        <a href="../includes/close.php" class="boton-menu">Cerrar sesión</a>
-    </div>
-</div>
+            <div class="enlace">
+                <i class='bx bx-grid-alt'></i>
+                <a href="admin.php" class="boton-menu">Dashboard</a>
+            </div>
+            <div class="enlace">
+                <i class='bx bx-user'></i>
+                <a href="usersactivos/index.php" class="boton-menu">Usuarios Activos</a>
+            </div>
+            <div class="enlace">
+                <i class='bx bx-user-x'></i>
+                <a href="usersinactivos/index.php" class="boton-menu">Usuarios Inactivos</a>
+            </div>
+            <div class="enlace">
+                <i class='bx bx-user-plus'></i>
+                <a href="registrousers/index.php" class="boton-menu">Registrar Usuarios</a>
+            </div>
+            <div class="enlace">
+                <i class='bx bx-book'></i>
+                <a href="fichas/fichas.php" class="boton-menu">Fichas</a>
+            </div>
+            <div class="enlace">
+                <i class='bx bx-book'></i>
+                <a href="clases/clases.php" class="boton-menu">Clases</a>
+            </div>
+            <div class="enlace">
+                <i class='bx bx-library'></i>
+                <a href="#" class="boton-menu">Materias</a>
+            </div>
+            <div class="enlace">
+                <i class='bx bx-conversation'></i>
+                <a href="#" class="boton-menu">Temas Foros</a>
+            </div>
+            <div class="enlace">
+                <i class='bx bx-time'></i>
+                <a href="#" class="boton-menu">Horarios</a>
+            </div>
+            <div class="enlace">
+                <i class='bx bx-line-chart'></i>
+                <a href="#" class="boton-menu">Analíticas</a>
+            </div>
+            <div class="enlace">
+                <i class='bx bx-file'></i>
+                <a href="#" class="boton-menu">Reportes</a>
+            </div>
+            <div class="enlace">
+                <i class='bx bx-shield'></i>
+                <a href="#" class="boton-menu">Seguridad</a>
+            </div>
+            <div class="enlace">
+                <i class='bx bx-log-out'></i>
+                <a href="../../includes/close.php" class="boton-menu">Cerrar sesión</a>
+            </div>
+        </div>
 
         </div>
                 <div id="contador-usuarios">

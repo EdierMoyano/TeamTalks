@@ -1,0 +1,129 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    color: #333;
+  }
+
+  /* Contenedor principal (contenido) */
+  .content {
+    margin-left: 320px; /* Mueve el contenido hacia la derecha */
+    padding: 20px;
+    max-width: 80%;  /* Hace el contenido un poco más estrecho */
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Contenedor para las tarjetas en dos columnas */
+  .cards-container {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+
+  /* Tarjetas: se actualiza el diseño para tonos azules (ahora sin tono azulado, fondo blanco) */
+  .card.shadow-sm {
+    /* Se elimina el ancho fijo para que se adapten al grid */
+    margin-bottom: 10px;  /* Reduce el margen inferior */
+    padding: 5px;         /* Reduce el padding interno del contenedor de la tarjeta */
+    background-color: #fff; /* Fondo blanco */
+    border: 1px solid #ddd; /* Borde neutro */
+    border-radius: 8px;
+  }
+
+  /* Tarjetas (card-body) */
+  .card-body {
+    
+    justify-content: center;
+    align-items: center;
+    display: block;
+    background-color: #fff;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 5px; /* Menor padding para un contenido más compacto */
+  }
+
+  .nombre {
+    color: white;
+  }
+
+  /* Títulos */
+  h1, h2, h5 {
+    color: #333;
+    margin-bottom: 10px;
+  }
+
+  /* Tablas */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 15px 0;
+  }
+
+  table thead {
+    background-color: #004B8D;
+    color: #fff;
+  }
+
+  table th,
+  table td {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    font-size: 13px;
+    text-align: left;
+  }
+
+  table tr:hover {
+    background-color: #f1f5fc;
+  }
+
+  /* Formularios */
+  input[type="text"],
+  input[type="number"],
+  input[type="email"],
+  select {
+    width: 100%;
+    padding: 6px 8px;
+    margin-bottom: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 13px;
+  }
+
+  button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    background-color: #407bcf;
+    color: #fff;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+
+  button:hover {
+    background-color: #3461c4;
+  }
+
+  /* Enlaces de acción */
+  a {
+    text-decoration: none;
+    color: inherit;
+  }
+
+  a img {
+    width: 25px;
+    height: 25px;
+    transition: transform 0.2s ease;
+  }
+
+  a img:hover {
+    transform: scale(1.1);
+  }

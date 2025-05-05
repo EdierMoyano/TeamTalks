@@ -59,7 +59,11 @@ $con = $conex->connect();
             </div>
             <div class="enlace">
                 <i class='bx bx-book'></i>
-                <a href="#" class="boton-menu">Clases</a>
+                <a href="../fichas/fichas.php" class="boton-menu">Fichas</a>
+            </div>
+            <div class="enlace">
+                <i class='bx bx-book'></i>
+                <a href="../clases/clases.php" class="boton-menu">Clases</a>
             </div>
             <div class="enlace">
                 <i class='bx bx-library'></i>

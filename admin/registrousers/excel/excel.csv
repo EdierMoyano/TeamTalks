@@ -1,5 +1,30 @@
-Id_user;Nombres;Correo;Contrasena;Avatar;Telefono;Id_rol;Id_estado;Id_docu;ficha;
-65904841;Juanes Pérez;juanperez@mail.com;password123;;3001234567;3;1;1;14092006
-1109492100;Anas García;anagarcia@mail.com;password456;;3009876543;2;1;2;14092006
-65904842;Carlosssa López;carloslopez@mail.com;password789;;3001122334;2;1;1;14092006
-
+Id_user;Nombres;Correo;Contrasena;Avatar;Telefono;Id_rol;Id_estado;Id_docu;ficha
+65904850;Pedro Gómez;pedrogomez@mail.com;clave123;;3001234567;3;1;1;14092006
+1109492110;María Rojas;mariarojas@mail.com;segura456;;3009876543;3;1;2;14092006
+65904851;Luis Fernández;luisfernandez@mail.com;clave789;;3001122334;3;1;1;14092006
+65904852;Andrea Ramírez;andreamail@mail.com;pass321;;3007654321;3;1;1;14092006
+1109492111;Santiago Torres;santiagotorres@mail.com;segura789;;3005566778;3;1;2;14092006
+65904853;Camila Ortega;camilaortega@mail.com;clave654;;3009988776;3;1;1;14092006
+65904854;Daniel Castillo;danielcastillo@mail.com;pass111;;3004455667;3;1;1;14092006
+1109492112;Natalia Herrera;nataliaherrera@mail.com;segura222;;3001122113;3;1;2;14092006
+65904855;José Medina;josemedina@mail.com;clave3  ;3008877665;3;1;1;14092006
+65904856;Carolina Suárez;carolinasuarez@mail.com;pass444;;3002233445;3;1;1;14092006
+1109492113;Esteban Vargas;estebanvargas@mail.com;segura555;;3003344556;3;1;2;14092006
+65904857;Luisa Martínez;luisamartinez@mail.com;clave666;;3006677889;3;1;1;14092006
+65904858;Ricardo Pineda;ricardopineda@mail.com;pass777;;3009988555;3;1;1;14092006
+1109492114;Verónica León;veronicaleon@mail.com;segura888;;3005566443;3;1;2;14092006
+65904859;Jorge Álvarez;jorgealvarez@mail.com;clave999;;3004433221;3;1;1;14092006
+65904860;Diana Giraldo;dianagiraldo@mail.com;pass000;;3007766554;3;1;1;14092006
+1109492115;Tomás Ramírez;tomasramirez@mail.com;segura101;;3006677441;3;1;2;14092006
+65904861;Lorena Castro;lorenacastro@mail.com;clave202;;3002233115;3;1;1;14092006
+65904862;Fernando López;fernandolopez@mail.com;pass303;;3009988664;3;1;1;14092006
+1109492116;Gabriela Mejía;gabrielamejia@mail.com;segura404;;3005544337;3;1;2;14092006
+65904863;Sergio Peralta;sergioperalta@mail.com;clave505;;3006655223;3;1;1;14092006
+65904864;Patricia Molina;patriciamolina@mail.com;pass606;;3003322118;3;1;1;14092006
+1109492117;Raúl Naranjo;raulnaranjo@mail.com;segura707;;3008855449;3;1;2;14092006
+65904865;Valentina Ortega;valentinaortega@mail.com;clave808;;3002211442;3;1;1;14092006
+65904866;Diego Salazar;diegosalazar@mail.com;pass909;;3007744332;3;1;1;14092006
+1109492118;Fabián Moreno;fabianmoreno@mail.com;segura1111;;3003322559;3;1;2;14092006
+65904867;Alejandra Beltrán;alejandrabeltran@mail.com;clave1212;;3009966334;3;1;1;14092006
+65904868;Hugo Valencia;hugovalencia@mail.com;pass1313;;3005544228;3;1;1;14092006
+1109492119;Nataly Guzmán;natalyguzman@mail.com;segura1414;;3008877226;3;1;2;14092006

@@ -32,7 +32,7 @@ $clase_id = isset($_GET['clase_id']) ? intval($_GET['clase_id']) : 0;
     <link rel="stylesheet" href="../styles/styles-dashboard.css">
     <link  rel='stylesheet'>
     <link rel="stylesheet" href="../styles/styles-dashboard.css">
-    <link rel="stylesheet" href="../registrousers/styles_registro/registro.css">
+    <link rel="stylesheet" href="../registrousers/styles_registro/clases1.css">
     <style>
         .content {
             margin-left: 250px;
@@ -49,7 +49,6 @@ $clase_id = isset($_GET['clase_id']) ? intval($_GET['clase_id']) : 0;
             padding: 8px;
             border: 1px solid #ddd;
             border-radius: 4px;
-            flex-grow: 1;
         }
         
         .search-container select {
@@ -60,7 +59,7 @@ $clase_id = isset($_GET['clase_id']) ? intval($_GET['clase_id']) : 0;
         
         .search-container button {
             padding: 8px 15px;
-            background-color: #4CAF50;
+            background-color: #004B8D;
             color: white;
             border: none;
             border-radius: 4px;
@@ -68,7 +67,7 @@ $clase_id = isset($_GET['clase_id']) ? intval($_GET['clase_id']) : 0;
         }
         
         .search-container button:hover {
-            background-color: #45a049;
+            background-color:rgb(1, 47, 88);
         }
         
         .class-list {
@@ -76,7 +75,7 @@ $clase_id = isset($_GET['clase_id']) ? intval($_GET['clase_id']) : 0;
         }
         
         .class-list table {
-            width: 100%;
+            width: 90%;
             border-collapse: collapse;
         }
         
@@ -87,7 +86,7 @@ $clase_id = isset($_GET['clase_id']) ? intval($_GET['clase_id']) : 0;
         }
         
         .class-list th {
-            background-color: #f2f2f2;
+            background-color: #004B8D;
         }
         
         .class-list tr:hover {
@@ -124,9 +123,9 @@ $clase_id = isset($_GET['clase_id']) ? intval($_GET['clase_id']) : 0;
         }
         
         .pagination a.active {
-            background-color: #4CAF50;
+            background-color: #004B8D;
             color: white;
-            border: 1px solid #4CAF50;
+            border: 1px solid #004B8D;
         }
         
         .pagination a:hover:not(.active) {
@@ -144,17 +143,17 @@ $clase_id = isset($_GET['clase_id']) ? intval($_GET['clase_id']) : 0;
         .action-btn {
             display: inline-block;
             padding: 5px 10px;
-            background-color: #4CAF50;
+            background-color: #004B8D;
             color: white;
             text-decoration: none;
             border-radius: 4px;
-            cursor: pointer;
+            transition: background-color 0.3s ease
         }
         
         .action-btn:hover {
-            background-color: #45a049;
+            background-color:rgb(1, 47, 88);
         }
-        
+
         .modal {
             display: none;
             position: fixed;
